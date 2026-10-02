@@ -38,6 +38,7 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
 
@@ -53,5 +54,6 @@ jobs:
           channel: 'stable'
           cache: true
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test

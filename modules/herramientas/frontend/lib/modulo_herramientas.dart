@@ -7,8 +7,7 @@ import 'ui/vistas/vista_principal.dart';
 
 /// Implementacion del contrato ModuloIde para el modulo Herramientas.
 class ModuloHerramientas implements ModuloIde {
-  ModuloHerramientas({ApiHerramientas? api})
-      : _api = api ?? ApiHerramientas();
+  ModuloHerramientas({ApiHerramientas? api}) : _api = api ?? ApiHerramientas();
 
   final ApiHerramientas _api;
 
