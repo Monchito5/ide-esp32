@@ -1,6 +1,7 @@
 # Archivo: core/backend/ide_core/config/setup.py
 """Arranque del IDE (patron AppConfig)."""
 
+import sys
 from dataclasses import dataclass
 
 import uvicorn
@@ -8,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ide_core.config.constants import (
+    DIRECTORIO_MONOREPO,
     ERR_FALLO_DB,
     HOST_API,
     MSG_EXITO_DB,
@@ -24,6 +26,16 @@ from ide_core.db.connection import (
     init_pool,
 )
 from ide_core.utils.logger import log_sistema
+
+# Asegura que los paquetes de modulos y sus backend sean importables
+# aunque se ejecute desde core/backend sin una instalacion editable.
+# - Raiz del monorepo: permite from modules.herramientas.backend.....
+# - modules/*/backend: permite from herramientas_backend.modulo (top-level).
+_rutas_modulos = [str(DIRECTORIO_MONOREPO)]
+_rutas_modulos.extend(str(p) for p in sorted(DIRECTORIO_MONOREPO.glob("modules/*/backend")))
+for _ruta_str in _rutas_modulos:
+    if _ruta_str not in sys.path:
+        sys.path.insert(0, _ruta_str)
 
 
 @dataclass(frozen=True, slots=True)

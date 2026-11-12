@@ -23,6 +23,7 @@ class LayoutPrincipal extends StatefulWidget {
 
 class _LayoutPrincipalState extends State<LayoutPrincipal> {
   int _indiceModulo = 0;
+  int _indiceNavRail = 0;
   String _placaSeleccionada = 'ESP32-S31 Dev Module';
   String _puertoSeleccionado = 'Buscando...';
   String _modoOperacion =
@@ -44,7 +45,9 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
   @override
   void initState() {
     super.initState();
-    _detectarPlacaYPuertoFisico();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _detectarPlacaYPuertoFisico();
+    });
   }
 
   void _agregarLog(String mensaje) {
@@ -296,6 +299,55 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
           Expanded(
             child: Row(
               children: [
+                // Barra lateral (NavigationRail) con 6 accesos del mockup
+                NavigationRail(
+                  selectedIndex: _indiceNavRail,
+                  onDestinationSelected: (index) {
+                    setState(() => _indiceNavRail = index);
+                  },
+                  labelType: NavigationRailLabelType.all,
+                  backgroundColor: TemaIde.colorPrimario,
+                  selectedIconTheme: const IconThemeData(
+                    color: Color(0xFF5D9BC3),
+                  ),
+                  unselectedIconTheme: const IconThemeData(
+                    color: Color(0xFFA9B9C9),
+                  ),
+                  selectedLabelTextStyle: const TextStyle(
+                    color: Color(0xFF5D9BC3),
+                    fontWeight: FontWeight.bold,
+                  ),
+                  unselectedLabelTextStyle: const TextStyle(
+                    color: Color(0xFFA9B9C9),
+                  ),
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.code),
+                      label: Text('Sketch'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.memory),
+                      label: Text('Placas'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.library_books),
+                      label: Text('Librerías'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.computer),
+                      label: Text('Monitor'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.show_chart),
+                      label: Text('Plotter'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.info_outline),
+                      label: Text('Info.'),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(width: 1, thickness: 1),
                 // Panel de Código y Consola
                 Expanded(
                   flex: 3,

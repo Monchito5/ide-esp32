@@ -32,7 +32,8 @@ class ApiIde {
   /// Verifica si un modulo específico está activo
   Future<bool> moduloActivo(String nombreModulo) async {
     final listaModulos = await modulos();
-    return listaModulos.any((m) => m['nombre'] == nombreModulo && m['activo'] == true);
+    return listaModulos
+        .any((m) => m['nombre'] == nombreModulo && m['activo'] == true);
   }
 
   /// Obtiene información del modulo Herramientas
