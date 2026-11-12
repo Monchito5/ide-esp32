@@ -3,3 +3,5 @@
 library herramientas_ui;
 
 export 'modulo_herramientas.dart';
+export 'servicios/api_herramientas.dart';
+export 'servicios/api_ide.dart';

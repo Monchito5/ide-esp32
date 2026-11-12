@@ -2,11 +2,14 @@
 import 'package:flutter/material.dart';
 
 import '../../servicios/api_herramientas.dart';
+import '../../servicios/api_ide.dart';
 
-/// Vista principal del modulo Herramientas.
+/// Vista principal del modulo Herramientas con integracion completa sprint-02.
 class VistaPrincipal extends StatefulWidget {
-  const VistaPrincipal({super.key, required this.api});
+  const VistaPrincipal({super.key, required this.api, required this.ideApi});
+
   final ApiHerramientas api;
+  final ApiIde ideApi;
 
   @override
   State<VistaPrincipal> createState() => _VistaPrincipalState();
@@ -15,6 +18,8 @@ class VistaPrincipal extends StatefulWidget {
 class _VistaPrincipalState extends State<VistaPrincipal> {
   List<Map<String, dynamic>> _puertos = const [];
   String _estado = 'Verificando backend...';
+  Map<String, dynamic> _infoIde = {};
+  bool _moduloActivo = false;
 
   @override
   void initState() {
@@ -24,10 +29,19 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
 
   Future<void> _refrescar() async {
     try {
+      // Obtener puertos serie
       final puertos = await widget.api.listarPuertos();
+      
+      // Obtener informacion del modulo y verificar si esta activo
+      final infoModulo = await widget.ideApi.infoModuloHerramientas();
+      final moduloActivo = await widget.ideApi.moduloActivo('herramientas');
+
       setState(() {
         _puertos = puertos;
-        _estado = 'Puertos detectados: ${puertos.length}';
+        _infoIde = infoModulo;
+        _moduloActivo = moduloActivo;
+        _estado =
+            'Puertos detectados: ${puertos.length} | Modulo: ${moduloActivo ? "Activo" : "Inactivo"}';
       });
     } catch (e) {
       setState(() => _estado = 'Error: $e');
@@ -41,19 +55,100 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_estado, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
+          // Estado general
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _moduloActivo ? Icons.check_circle : Icons.error,
+                        color: _moduloActivo ? Colors.green : Colors.red,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _estado,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                  if (_infoIde.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Nombre: ${_infoIde['nombre'] ?? 'N/A'}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Text(
+                      'Version: ${_infoIde['version'] ?? 'N/A'}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Botones de acciones rápidas
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _refrescar,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refrescar'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => widget.api.listarPlacas(),
+                icon: const Icon(Icons.memory),
+                label: const Text('Placas Arduino'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => widget.api.versionArduinoCli(),
+                icon: const Icon(Icons.info),
+                label: const Text('Version Arduino'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => widget.api.estadoPlatformIO(),
+                icon: const Icon(Icons.build),
+                label: const Text('Estado PlatformIO'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => widget.api.versionEspIdf(),
+                icon: const Icon(Icons.settings),
+                label: const Text('Version ESP-IDF'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Lista de puertos
           Expanded(
-            child: ListView.builder(
-              itemCount: _puertos.length,
-              itemBuilder: (context, i) {
-                final p = _puertos[i];
-                return ListTile(
-                  leading: const Icon(Icons.usb),
-                  title: Text(p['dispositivo'] ?? ''),
-                  subtitle: Text(p['descripcion'] ?? ''),
-                );
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Puertos Serie ($_puertos.length)',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _puertos.length,
+                    itemBuilder: (context, i) {
+                      final p = _puertos[i];
+                      return ListTile(
+                        leading: const Icon(Icons.usb),
+                        title: Text(p['dispositivo'] ?? ''),
+                        subtitle: Text(p['descripcion'] ?? ''),
+                        trailing: Text(p['fabricante'] ?? ''),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],

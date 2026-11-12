@@ -1,6 +1,6 @@
 # IDE ESP32 (Monorepo)
 
-**Equipo inicial**: GRIS | **Version**: 6.0 | **Fecha**: 24 sep. 2026
+**Version**: 6.0 | **Fecha**: 24 sep. 2026
 
 Monorepo del IDE a la medida para ESP32-S3. El **IDE es el producto**; `herramientas` es un módulo plug-in que este equipo aporta.
 
@@ -60,11 +60,50 @@ Para todas las convenciones de código (sin `__init__.py`, imports absolutos `id
 6. Agregar esquema SQL en `sql/02_schema_<nuevo>.sql`.
 7. Si trae dependencias nuevas, agregarlas a `requirements.txt` (raíz).
 
-## Equipo GRIS (responsable de la base)
+## Núcleo de Herramientas
 
-- Ing. Guillermo - Lider tecnico / Core backend
-- Ing. Neri - Shell del IDE / Core frontend
-- Ing. Erick - QA / DevOps
+### Nuevas Capabilidades Incluidas:
+- Integración de **Arduino CLI** para detección de placas y puertos
+- Integración de **PlatformIO** para gestión de toolchains, bibliotecas y proyectos
+- Integración de **ESP-IDF** para configuración SDK y menuconfig
+- Controladores de dominio, aplicación e infraestructura seguros bajo Arquitectura Limpia
+- 12 endpoints API bajo `/api/v1/herramientas` para todo el espectro de funcionalidades
+
+### Estructura Renovada (Arquitectura Limpia):
+
+```
+modules/herramientas/backend/herramientas_backend/
+├── models.py           # Capa de Dominio: Entidades puras (PuertoSerie, Herramienta, Puerto, ConfiguracionESP32)
+├── controllers/        # Capa de Adaptadores: FastAPI controllers (arduino.py, puerto.py)
+├── routes.py           # 12 endpoints API organizados por funcionalidad
+├── modulo.py           # Punto de entrada: registrar(app)
+├── application/        # Casos de uso (use_cases.py)
+├── infrastructure/     # Implementaciones concretas (Arduino, PlatformIO, ESP-IDF)
+│   ├── arduino/
+│   │   └── cli_service.py
+│   ├── platformio/
+│   │   └── manager.py
+│   └── esp_idf/
+│       └── configurator.py
+└── shared/             # Utilidades y constantes
+```
+
+### Endpoints API Disponibles
+
+| Endpoint | Método | Descripción |
+|----------|--------|-------------|
+| `/puertos` | GET | Listar puertos serie disponibles |
+| `/arduino/version` | GET | Obtener versión de Arduino CLI |
+| `/arduino/placas` | GET | Listar placas detectadas |
+| `/reportes/flash` | GET | Resumen de flasheo realizado |
+| `/esp-idf/version` | GET | Versión de ESP-IDF instalada |
+| `/esp-idf/sdkconfig` | GET | Configuración actual del SDK |
+| `/esp-idf/menuconfig` | GET | Menú de configuración interactivo |
+| `/platformio/estado` | GET | Estado de PlatformIO instalado |
+| `/platformio/iniciar` | POST | Inicializar proyecto PlatformIO |
+| `/platformio/compilar` | POST | Compilar proyecto PlatformIO |
+| `/platformio/flashear` | POST | Flashear firmware al puerto especificado |
+| `/platformio/puertos-disponibles` | GET | Puertos serie disponibles via PlatformIO |
 
 ---
 

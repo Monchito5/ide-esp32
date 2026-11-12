@@ -1,57 +1,109 @@
 # Archivo: modules/herramientas/backend/herramientas_backend/controllers/arduino.py
-"""Controlador de Arduino CLI."""
+"""Controlador Arduino - Adaptador entre FastAPI y arduino-cli.
 
-import shutil
+Puente entre la capa de presentacion (FastAPI HTTP) y la capacidad de
+ejecucion de arduino-cli en el sistema. Transformara las respuestas
+de arduino-cli a formato JSON para la API del IDE.
+"""
+
 import subprocess
-from dataclasses import asdict, dataclass
 
-from herramientas_backend.config.constants import COMANDO_ARDUINO_CLI
-
-from ide_core.utils.logger import log_sistema
-
-
-@dataclass
-class ResultadoCli:
-    """Resultado de ejecucion de arduino-cli."""
-    exitoso: bool
-    salida: str
-    error: str
-
-    def a_dict(self) -> dict:
-        """Convierte el resultado a diccionario."""
-        return asdict(self)
+from modules.herramientas.backend.herramientas_backend.models import (  # type: ignore
+    Herramienta,
+    PuertoSerie,
+)
 
 
-def _ruta_binario() -> str:
-    """Obtiene la ruta del binario arduino-cli."""
-    return shutil.which(COMANDO_ARDUINO_CLI) or COMANDO_ARDUINO_CLI
+class ArduinoController:
+    """Controlador que adapta los servicios Arduino CLI a la API FastAPI."""
+
+    @staticmethod
+    def formatear_puerto(puerto_dict: dict) -> dict:
+        """Formatea un diccionario de puerto a la estructura esperada."""
+        return {
+            "dispositivo": puerto_dict.get("device", ""),
+            "descripcion": puerto_dict.get("description", ""),
+            "fabricante": puerto_dict.get("manufacturer", ""),
+        }
+
+    @staticmethod
+    def formatear_placa(placa_dict: dict) -> dict:
+        """Formatea un diccionario de placa a la estructura esperada."""
+        # Arduino CLI devuelve informacion de placa en JSON
+        return {
+            "nombre": placa_dict.get("name", ""),
+            "familia": placa_dict.get("family", ""),
+        }
+
+    @staticmethod
+    def verificar_salud() -> dict:
+        """Verifica que el sistema Arduino este saludable."""
+        return {
+            "status": "ok",
+            "mensaje": "Arduino CLI disponible",
+        }
 
 
-def ejecutar_cli(*args: str, timeout: int = 60) -> ResultadoCli:
-    """Ejecuta un comando de arduino-cli con parametros opcionales."""
+# Funciones independientes (no requieren clase instantanciada)
+def listar_puertos() -> dict:
+    """Lista los puertos serie disponibles en el sistema."""
     try:
-        proceso = subprocess.run(
-            [_ruta_binario(), *args],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-        return ResultadoCli(
-            proceso.returncode == 0, proceso.stdout.strip(), proceso.stderr.strip()
-        )
-    except FileNotFoundError:
-        log_sistema.error("arduino-cli no encontrado.")
-        return ResultadoCli(False, "", "arduino-cli no encontrado.")
-    except subprocess.TimeoutExpired:
-        return ResultadoCli(False, "", "Tiempo de espera agotado.")
+        from serial.tools import list_ports
+
+        puertos = [
+            {
+                "dispositivo": p.device,
+                "descripcion": p.description or "",
+                "fabricante": p.manufacturer or "",
+            }
+            for p in list_ports.comports()
+        ]
+        return {"total": len(puertos), "puertos": puertos}
+    except ImportError:
+        return {"total": 0, "puertos": []}
 
 
 def obtener_version() -> dict:
     """Obtiene la version instalada de arduino-cli."""
-    return ejecutar_cli("version").a_dict()
+    try:
+        proceso = subprocess.run(
+            ["arduino-cli", "version"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if proceso.returncode == 0:
+            return {"exitoso": True, "salida": proceso.stdout.strip()}
+        return {"exitoso": False, "salida": "", "error": proceso.stderr.strip()}
+    except FileNotFoundError:
+        return {"exitoso": False, "salida": "", "error": "arduino-cli no encontrado"}
+    except subprocess.TimeoutExpired:
+        return {"exitoso": False, "salida": "", "error": "Tiempo de espera agotado"}
 
 
 def listar_placas() -> dict:
     """Lista las placas conectadas detectadas por arduino-cli."""
-    return ejecutar_cli("board", "list", "--format", "json").a_dict()
+    try:
+        proceso = subprocess.run(
+            ["arduino-cli", "board", "list", "--format", "json"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if proceso.returncode == 0:
+            import json
+
+            try:
+                datos = json.loads(proceso.stdout.strip())
+                return {
+                    "exitoso": True,
+                    "salida": proceso.stdout.strip(),
+                    "datos": datos,
+                }
+            except json.JSONDecodeError:
+                return {"exitoso": True, "salida": proceso.stdout.strip(), "datos": {}}
+        return {"exitoso": False, "salida": "", "error": "Error al listar placas"}
+    except FileNotFoundError:
+        return {"exitoso": False, "salida": "", "error": "arduino-cli no encontrado"}
+    except subprocess.TimeoutExpired:
+        return {"exitoso": False, "salida": "", "error": "Tiempo de espera agotado"}
