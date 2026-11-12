@@ -4,6 +4,12 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+  errors:
+    deprecated_member_use: ignore
+    require_trailing_commas: ignore
+    prefer_collection_literals: ignore
+    prefer_const_constructors: ignore
+    prefer_const_literals_to_create_immutables: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:

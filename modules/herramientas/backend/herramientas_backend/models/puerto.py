@@ -9,6 +9,7 @@ from ide_core.models.base import ejecutar, ejecutar_mutacion
 @dataclass
 class Puerto:
     """Representacion de un puerto serie."""
+
     dispositivo: str
     descripcion: str = ""
     fabricante: str = ""
