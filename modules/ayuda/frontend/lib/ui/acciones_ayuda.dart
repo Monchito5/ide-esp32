@@ -10,20 +10,12 @@ import 'ventana_acerca_de.dart';
 ///
 /// La aplicacion llama a esta funcion al construir [LayoutPrincipal]; asi el
 /// core no necesita conocer la implementacion del modulo.
-void mostrarCreditos(BuildContext context) {
-  creditos.mostrarCreditos(context);
-}
-
-void mostrarEnlacesRapidos(BuildContext context) {
-  mostrarCentroAyuda(context);
-}
-
 AccionesAyuda crearAccionesAyuda() {
   return const AccionesAyuda(
     abrirDocumentacion: mostrarCentroAyuda,
     abrirPreguntasFrecuentes: mostrarFaq,
     abrirAcercaDe: mostrarAcercaDe,
-    abrirCreditos: mostrarCreditos,
-    abrirEnlacesRapidos: mostrarEnlacesRapidos,
+    abrirCreditos: creditos.mostrarCreditos,
+    abrirEnlacesRapidos: mostrarCentroAyuda,
   );
 }

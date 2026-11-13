@@ -176,7 +176,6 @@ class _AccionRapida extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: PaletaAyuda.fondo,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: alPresionar,
@@ -244,7 +243,6 @@ class _TarjetaEnlace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: () => abrirEnlaceExterno(context, enlace.url),
