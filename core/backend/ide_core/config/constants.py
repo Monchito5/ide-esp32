@@ -30,4 +30,5 @@ PREFIJO_API = "/api/v1"
 MODULOS_REGISTRADOS = [
     "herramientas_backend.modulo",
     "archivo_backend.modulo",
+    "simulacion_backend.modulo",
 ]
