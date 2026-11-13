@@ -3,6 +3,7 @@
 // PUNTO CENTRAL donde se declaran los modulos activos del IDE.
 // Cada equipo agrega aqui su modulo importandolo desde modules/.
 
+import 'package:archivo_ui/archivo_ui.dart';
 import 'package:ayuda_ui/ayuda_ui.dart';
 import 'package:herramientas_ui/herramientas_ui.dart';
 import 'package:ide_core/ide_core.dart';
@@ -14,6 +15,7 @@ import 'package:ide_core/ide_core.dart';
 ///   2. Agregar una instancia a la lista.
 List<ModuloIde> construirModulos() {
   return <ModuloIde>[
+    ModuloArchivo(),
     ModuloHerramientas(),
     const ModuloAyuda(),
     // ModuloOtroEquipo(),
