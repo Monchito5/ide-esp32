@@ -18,7 +18,7 @@ class ResultadoApi<T> {
 /// Cliente HTTP para las rutas del modulo Simulacion.
 class ApiSimulacion {
   ApiSimulacion({String? baseUrl})
-      : baseUrl = baseUrl ?? 'http://127.0.0.1:8765/api/v1/simulacion';
+    : baseUrl = baseUrl ?? 'http://127.0.0.1:8765/api/v1/simulacion';
 
   final String baseUrl;
 
@@ -62,7 +62,9 @@ class ApiSimulacion {
     );
   }
 
-  Future<ResultadoApi<Map<String, dynamic>>> crearSesion(Map<String, dynamic> datos) async {
+  Future<ResultadoApi<Map<String, dynamic>>> crearSesion(
+    Map<String, dynamic> datos,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(
         Uri.parse('$baseUrl/sesiones'),
@@ -73,28 +75,36 @@ class ApiSimulacion {
     );
   }
 
-  Future<ResultadoApi<Map<String, dynamic>>> obtenerSesion(String sesionId) async {
+  Future<ResultadoApi<Map<String, dynamic>>> obtenerSesion(
+    String sesionId,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.get(Uri.parse('$baseUrl/sesiones/$sesionId')),
       (d) => d as Map<String, dynamic>,
     );
   }
 
-  Future<ResultadoApi<Map<String, dynamic>>> iniciarSesion(String sesionId) async {
+  Future<ResultadoApi<Map<String, dynamic>>> iniciarSesion(
+    String sesionId,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(Uri.parse('$baseUrl/sesiones/$sesionId/iniciar')),
       (d) => d as Map<String, dynamic>,
     );
   }
 
-  Future<ResultadoApi<Map<String, dynamic>>> detenerSesion(String sesionId) async {
+  Future<ResultadoApi<Map<String, dynamic>>> detenerSesion(
+    String sesionId,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(Uri.parse('$baseUrl/sesiones/$sesionId/detener')),
       (d) => d as Map<String, dynamic>,
     );
   }
 
-  Future<ResultadoApi<Map<String, dynamic>>> reiniciarSesion(String sesionId) async {
+  Future<ResultadoApi<Map<String, dynamic>>> reiniciarSesion(
+    String sesionId,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(Uri.parse('$baseUrl/sesiones/$sesionId/reiniciar')),
       (d) => d as Map<String, dynamic>,
@@ -102,7 +112,9 @@ class ApiSimulacion {
   }
 
   Future<ResultadoApi<Map<String, dynamic>>> flashearSesion(
-      String sesionId, Map<String, dynamic> datosFlasheo) async {
+    String sesionId,
+    Map<String, dynamic> datosFlasheo,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(
         Uri.parse('$baseUrl/sesiones/$sesionId/flashear'),
@@ -114,7 +126,9 @@ class ApiSimulacion {
   }
 
   Future<ResultadoApi<Map<String, dynamic>>> enviarComando(
-      String sesionId, Map<String, dynamic> datosComando) async {
+    String sesionId,
+    Map<String, dynamic> datosComando,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(
         Uri.parse('$baseUrl/sesiones/$sesionId/comandos'),
@@ -126,7 +140,9 @@ class ApiSimulacion {
   }
 
   Future<ResultadoApi<Map<String, dynamic>>> agregarComponente(
-      String sesionId, Map<String, dynamic> datosComponente) async {
+    String sesionId,
+    Map<String, dynamic> datosComponente,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(
         Uri.parse('$baseUrl/sesiones/$sesionId/componentes'),
@@ -137,7 +153,9 @@ class ApiSimulacion {
     );
   }
 
-  Future<ResultadoApi<Map<String, dynamic>>> obtenerReporte(String sesionId) async {
+  Future<ResultadoApi<Map<String, dynamic>>> obtenerReporte(
+    String sesionId,
+  ) async {
     return _ejecutar<Map<String, dynamic>>(
       http.get(Uri.parse('$baseUrl/sesiones/$sesionId/reportes')),
       (d) => d as Map<String, dynamic>,

@@ -83,7 +83,9 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
               value: motorSeleccionado,
               items: const [
                 DropdownMenuItem(
-                    value: 'esp_emulator', child: Text('ESP Emulator')),
+                  value: 'esp_emulator',
+                  child: Text('ESP Emulator'),
+                ),
                 DropdownMenuItem(value: 'qemu', child: Text('QEMU')),
               ],
               onChanged: (v) => motorSeleccionado = v ?? 'esp_emulator',
@@ -214,8 +216,11 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.device_unknown,
-                            size: 64, color: Colors.grey),
+                        const Icon(
+                          Icons.device_unknown,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           'No hay sesiones de simulacion',
@@ -229,12 +234,13 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
                         ),
                       ],
                     ),
-                    )
+                  )
                 : ListView.builder(
                     itemCount: _sesiones.length,
                     itemBuilder: (context, i) {
                       final s = _sesiones[i];
-                      final esSeleccionada = _sesionSeleccionada == s['sesion_id'];
+                      final esSeleccionada =
+                          _sesionSeleccionada == s['sesion_id'];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
@@ -255,30 +261,44 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
                             children: [
                               if (s['estado'] != 'iniciada')
                                 IconButton(
-                                  icon: const Icon(Icons.play_arrow,
-                                      color: Colors.green),
-                                  onPressed: () => _iniciarSesion(s['sesion_id']),
+                                  icon: const Icon(
+                                    Icons.play_arrow,
+                                    color: Colors.green,
+                                  ),
+                                  onPressed: () =>
+                                      _iniciarSesion(s['sesion_id']),
                                 ),
                               if (s['estado'] == 'iniciada') ...[
                                 IconButton(
-                                  icon: const Icon(Icons.stop,
-                                      color: Colors.red),
-                                  onPressed: () => _detenerSesion(s['sesion_id']),
+                                  icon: const Icon(
+                                    Icons.stop,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () =>
+                                      _detenerSesion(s['sesion_id']),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.restart_alt,
-                                      color: Colors.orange),
-                                  onPressed: () => _reiniciarSesion(s['sesion_id']),
+                                  icon: const Icon(
+                                    Icons.restart_alt,
+                                    color: Colors.orange,
+                                  ),
+                                  onPressed: () =>
+                                      _reiniciarSesion(s['sesion_id']),
                                 ),
                               ],
                               IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.grey),
-                                onPressed: () => _eliminarSesion(s['sesion_id']),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () =>
+                                    _eliminarSesion(s['sesion_id']),
                               ),
                             ],
                           ),
-                          onTap: () => setState(() => _sesionSeleccionada = s['sesion_id']),
+                          onTap: () => setState(
+                            () => _sesionSeleccionada = s['sesion_id'],
+                          ),
                           selected: esSeleccionada,
                         ),
                       );
@@ -293,17 +313,23 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
                 children: [
                   const Text(
                     'Detalle de Sesion',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  SimulationControls(api: widget.api, sesionId: _sesionSeleccionada!),
+                  SimulationControls(
+                    api: widget.api,
+                    sesionId: _sesionSeleccionada!,
+                  ),
                   const SizedBox(height: 16),
-                  VirtualComponents(api: widget.api, sesionId: _sesionSeleccionada!),
+                  VirtualComponents(
+                    api: widget.api,
+                    sesionId: _sesionSeleccionada!,
+                  ),
                   const SizedBox(height: 16),
-                  SimulationTerminal(api: widget.api, sesionId: _sesionSeleccionada!),
+                  SimulationTerminal(
+                    api: widget.api,
+                    sesionId: _sesionSeleccionada!,
+                  ),
                 ],
               ),
             ),

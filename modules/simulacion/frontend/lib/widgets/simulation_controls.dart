@@ -36,7 +36,10 @@ class _SimulationControlsState extends State<SimulationControls> {
     }
   }
 
-  Future<void> _ejecutarAccion(String accion, Future<Map<String, dynamic>> future) async {
+  Future<void> _ejecutarAccion(
+    String accion,
+    Future<Map<String, dynamic>> future,
+  ) async {
     setState(() => _cargando = true);
     final r = await future;
     setState(() => _cargando = false);
@@ -72,9 +75,14 @@ class _SimulationControlsState extends State<SimulationControls> {
               children: [
                 const Text('Estado: '),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: estaActiva ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                    color: estaActiva
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.grey.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
                       color: estaActiva ? Colors.green : Colors.grey,
@@ -97,7 +105,12 @@ class _SimulationControlsState extends State<SimulationControls> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.play_arrow),
                     label: const Text('Iniciar'),
-                    onPressed: estaActiva ? null : () => _ejecutarAccion('iniciar', widget.api.iniciarSesion(widget.sesionId)),
+                    onPressed: estaActiva
+                        ? null
+                        : () => _ejecutarAccion(
+                            'iniciar',
+                            widget.api.iniciarSesion(widget.sesionId),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -105,7 +118,12 @@ class _SimulationControlsState extends State<SimulationControls> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.stop),
                     label: const Text('Detener'),
-                    onPressed: !estaActiva ? null : () => _ejecutarAccion('detener', widget.api.detenerSesion(widget.sesionId)),
+                    onPressed: !estaActiva
+                        ? null
+                        : () => _ejecutarAccion(
+                            'detener',
+                            widget.api.detenerSesion(widget.sesionId),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -113,7 +131,12 @@ class _SimulationControlsState extends State<SimulationControls> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.restart_alt),
                     label: const Text('Reiniciar'),
-                    onPressed: !estaActiva ? null : () => _ejecutarAccion('reiniciar', widget.api.reiniciarSesion(widget.sesionId)),
+                    onPressed: !estaActiva
+                        ? null
+                        : () => _ejecutarAccion(
+                            'reiniciar',
+                            widget.api.reiniciarSesion(widget.sesionId),
+                          ),
                   ),
                 ),
               ],
@@ -125,7 +148,9 @@ class _SimulationControlsState extends State<SimulationControls> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.file_upload),
                     label: const Text('Flashear'),
-                    onPressed: !estaActiva ? null : () => _mostrarDialogoFlashear(),
+                    onPressed: !estaActiva
+                        ? null
+                        : () => _mostrarDialogoFlashear(),
                   ),
                 ),
               ],
@@ -174,10 +199,10 @@ class _SimulationControlsState extends State<SimulationControls> {
             child: const Text('Flashear'),
             onPressed: () async {
               Navigator.of(context).pop();
-              final r = await widget.api.flashearSesion(
-                widget.sesionId,
-                {'archivo': archivo, 'direccion': direccion},
-              );
+              final r = await widget.api.flashearSesion(widget.sesionId, {
+                'archivo': archivo,
+                'direccion': direccion,
+              });
               if (!r.ok) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

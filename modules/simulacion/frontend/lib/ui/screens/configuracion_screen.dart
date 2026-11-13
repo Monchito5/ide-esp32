@@ -45,11 +45,14 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                     value: _motorSeleccionado,
                     items: const [
                       DropdownMenuItem(
-                          value: 'esp_emulator', child: Text('ESP Emulator')),
+                        value: 'esp_emulator',
+                        child: Text('ESP Emulator'),
+                      ),
                       DropdownMenuItem(value: 'qemu', child: Text('QEMU')),
                     ],
-                    onChanged: (v) =>
-                        setState(() => _motorSeleccionado = v ?? 'esp_emulator'),
+                    onChanged: (v) => setState(
+                      () => _motorSeleccionado = v ?? 'esp_emulator',
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -61,9 +64,14 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                     value: _chipPredeterminado,
                     items: const [
                       DropdownMenuItem(
-                          value: 'ESP32-S3', child: Text('ESP32-S3')),
+                        value: 'ESP32-S3',
+                        child: Text('ESP32-S3'),
+                      ),
                       DropdownMenuItem(value: 'ESP32', child: Text('ESP32')),
-                      DropdownMenuItem(value: 'ESP32-C3', child: Text('ESP32-C3')),
+                      DropdownMenuItem(
+                        value: 'ESP32-C3',
+                        child: Text('ESP32-C3'),
+                      ),
                     ],
                     onChanged: (v) =>
                         setState(() => _chipPredeterminado = v ?? 'ESP32-S3'),
@@ -80,9 +88,9 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                       hintText: '30',
                     ),
                     keyboardType: TextInputType.number,
-                    onChanged: (v) =>
-                        setState(() => _tiempoEsperaPredeterminado =
-                            int.tryParse(v) ?? 30),
+                    onChanged: (v) => setState(
+                      () => _tiempoEsperaPredeterminado = int.tryParse(v) ?? 30,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
@@ -90,9 +98,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                     label: const Text('Guardar Configuracion'),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Configuracion guardada'),
-                        ),
+                        const SnackBar(content: Text('Configuracion guardada')),
                       );
                     },
                   ),

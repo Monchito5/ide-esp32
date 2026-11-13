@@ -40,14 +40,11 @@ class _VirtualComponentsState extends State<VirtualComponents> {
   }
 
   Future<void> _agregarComponente() async {
-    final r = await widget.api.agregarComponente(
-      widget.sesionId,
-      {
-        'id': 'comp_${DateTime.now().millisecondsSinceEpoch}',
-        'tipo': _tipoSeleccionado,
-        'puerto': _puertoSeleccionado,
-      },
-    );
+    final r = await widget.api.agregarComponente(widget.sesionId, {
+      'id': 'comp_${DateTime.now().millisecondsSinceEpoch}',
+      'tipo': _tipoSeleccionado,
+      'puerto': _puertoSeleccionado,
+    });
     if (r.ok) {
       _cargarComponentes();
     } else {
@@ -83,7 +80,8 @@ class _VirtualComponentsState extends State<VirtualComponents> {
                     DropdownMenuItem(value: 'sensor', child: Text('Sensor')),
                     DropdownMenuItem(value: 'display', child: Text('Pantalla')),
                   ],
-                  onChanged: (v) => setState(() => _tipoSeleccionado = v ?? 'led'),
+                  onChanged: (v) =>
+                      setState(() => _tipoSeleccionado = v ?? 'led'),
                 ),
                 const SizedBox(width: 8),
                 DropdownButton<String>(
@@ -98,7 +96,8 @@ class _VirtualComponentsState extends State<VirtualComponents> {
                     DropdownMenuItem(value: 'GPIO22', child: Text('GPIO22')),
                     DropdownMenuItem(value: 'GPIO23', child: Text('GPIO23')),
                   ],
-                  onChanged: (v) => setState(() => _puertoSeleccionado = v ?? 'GPIO2'),
+                  onChanged: (v) =>
+                      setState(() => _puertoSeleccionado = v ?? 'GPIO2'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
@@ -115,15 +114,19 @@ class _VirtualComponentsState extends State<VirtualComponents> {
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               )
             else
-              ..._componentes.map((c) => ListTile(
-                leading: Icon(_iconoParaTipo(c['tipo']), color: Colors.blue),
-                title: Text(c['tipo']),
-                subtitle: Text('Puerto: ${c['puerto']} • Estado: ${c['estado']}'),
-                trailing: Switch(
-                  value: c['estado'] == 'activo',
-                  onChanged: (_) {},
+              ..._componentes.map(
+                (c) => ListTile(
+                  leading: Icon(_iconoParaTipo(c['tipo']), color: Colors.blue),
+                  title: Text(c['tipo']),
+                  subtitle: Text(
+                    'Puerto: ${c['puerto']} • Estado: ${c['estado']}',
+                  ),
+                  trailing: Switch(
+                    value: c['estado'] == 'activo',
+                    onChanged: (_) {},
+                  ),
                 ),
-              )),
+              ),
           ],
         ),
       ),
@@ -132,11 +135,16 @@ class _VirtualComponentsState extends State<VirtualComponents> {
 
   IconData _iconoParaTipo(String tipo) {
     switch (tipo) {
-      case 'led': return Icons.lightbulb;
-      case 'button': return Icons.touch_app;
-      case 'sensor': return Icons.sensors;
-      case 'display': return Icons.display;
-      default: return Icons.devices;
+      case 'led':
+        return Icons.lightbulb;
+      case 'button':
+        return Icons.touch_app;
+      case 'sensor':
+        return Icons.sensors;
+      case 'display':
+        return Icons.display;
+      default:
+        return Icons.devices;
     }
   }
 }

@@ -8,8 +8,7 @@ import 'ui/screens/simulacion_screen.dart';
 
 /// Implementacion del contrato ModuloIde para el modulo Simulacion.
 class ModuloSimulacion implements ModuloIde {
-  ModuloSimulacion({ApiSimulacion? api})
-      : _api = api ?? ApiSimulacion();
+  ModuloSimulacion({ApiSimulacion? api}) : _api = api ?? ApiSimulacion();
 
   final ApiSimulacion _api;
 
@@ -23,6 +22,5 @@ class ModuloSimulacion implements ModuloIde {
   IconData get icono => Icons.sim_card;
 
   @override
-  Widget construirVista(BuildContext context) =>
-      SimulacionScreen(api: _api);
+  Widget construirVista(BuildContext context) => SimulacionScreen(api: _api);
 }

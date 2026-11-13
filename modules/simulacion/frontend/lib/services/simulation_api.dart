@@ -3,6 +3,7 @@
 library simulacion_api;
 
 import 'package:http/http.dart' as http;
+
 import 'dart:convert';
 
 /// Servicio de alto nivel para operaciones de simulacion.
@@ -10,7 +11,10 @@ class SimulationService {
   final String baseUrl;
   SimulationService({this.baseUrl = 'http://127.0.0.1:8765/api/v1/simulacion'});
 
-  Future<Map<String, dynamic>> post(String endpoint, {Map<String, dynamic>? body}) async {
+  Future<Map<String, dynamic>> post(
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) async {
     final uri = Uri.parse('$baseUrl$endpoint');
     final r = await http.post(
       uri,

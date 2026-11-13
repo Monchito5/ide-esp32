@@ -14,8 +14,9 @@ class VirtualBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado =
-        estado == 'iniciada' ? Colors.green.shade400 : Colors.grey.shade400;
+    final colorEstado = estado == 'iniciada'
+        ? Colors.green.shade400
+        : Colors.grey.shade400;
 
     return Card(
       elevation: 4,
@@ -69,10 +70,7 @@ class VirtualBoard extends StatelessWidget {
                   ),
                   const Text(
                     'CPU',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 8,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 8),
                   ),
                 ],
               ),
@@ -127,10 +125,7 @@ class VirtualBoard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           nombre,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 8,
-          ),
+          style: const TextStyle(color: Colors.white70, fontSize: 8),
         ),
       ],
     );

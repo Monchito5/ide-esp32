@@ -52,12 +52,14 @@ class _VistaArchivoState extends State<VistaArchivo> {
       _mostrarSnack('$etiqueta: ${r.error}', esError: true);
       return r;
     }
-    _mostrarSnack('$etiqueta: ${r.data?['result'] ?? r.data?['mensaje'] ?? 'ok'}');
+    _mostrarSnack(
+        '$etiqueta: ${r.data?['result'] ?? r.data?['mensaje'] ?? 'ok'}');
     await _cargarRecientes();
     return r;
   }
 
-  Widget _boton(IconData icono, String etiqueta, Future<ResultadoApi<Map<String, dynamic>>> Function() accion) {
+  Widget _boton(IconData icono, String etiqueta,
+      Future<ResultadoApi<Map<String, dynamic>>> Function() accion) {
     return ElevatedButton.icon(
       onPressed: () async {
         final r = await accion();
@@ -91,17 +93,20 @@ class _VistaArchivoState extends State<VistaArchivo> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _boton(Icons.description, 'Nuevo sketch', widget.api.nuevoSketch),
+                      _boton(Icons.description, 'Nuevo sketch',
+                          widget.api.nuevoSketch),
                       _boton(Icons.folder_open, 'Abrir archivo', () async {
                         final r = await widget.api.abrirArchivo(filepath: '');
                         return _ejecutar(r, 'Abrir archivo');
                       }),
                       _boton(Icons.save, 'Guardar archivo', () async {
-                        final r = await widget.api.guardarArchivo(filepath: '', content: '');
+                        final r = await widget.api
+                            .guardarArchivo(filepath: '', content: '');
                         return _ejecutar(r, 'Guardar archivo');
                       }),
                       _boton(Icons.save_as, 'Guardar como', () async {
-                        final r = await widget.api.guardarComo(filepath: '', content: '');
+                        final r = await widget.api
+                            .guardarComo(filepath: '', content: '');
                         return _ejecutar(r, 'Guardar como');
                       }),
                       _boton(Icons.refresh, 'Recargar sketch', () async {
@@ -112,13 +117,17 @@ class _VistaArchivoState extends State<VistaArchivo> {
                         final r = await widget.api.cerrarSketch(filepath: '');
                         return _ejecutar(r, 'Cerrar sketch');
                       }),
-                      _boton(Icons.save, 'Plantilla base', widget.api.obtenerPlantillaBase),
+                      _boton(Icons.save, 'Plantilla base',
+                          widget.api.obtenerPlantillaBase),
                       _boton(Icons.info, 'Info sketch', () async {
-                        final r = await widget.api.obtenerInfoSketch(filepath: '');
+                        final r =
+                            await widget.api.obtenerInfoSketch(filepath: '');
                         return _ejecutar(r, 'Info sketch');
                       }),
-                      _boton(Icons.restore, 'Restablecer preferencias', widget.api.restablecerPreferencias),
-                      _boton(Icons.delete, 'Limpiar recientes', widget.api.limpiarRecientes),
+                      _boton(Icons.restore, 'Restablecer preferencias',
+                          widget.api.restablecerPreferencias),
+                      _boton(Icons.delete, 'Limpiar recientes',
+                          widget.api.limpiarRecientes),
                     ],
                   ),
                 ],
@@ -136,18 +145,18 @@ class _VistaArchivoState extends State<VistaArchivo> {
             child: _cargando
                 ? const Center(child: CircularProgressIndicator())
                 : _recientes.isEmpty
-                ? const Center(child: Text('Sin archivos recientes'))
-                : ListView.builder(
-                    itemCount: _recientes.length,
-                    itemBuilder: (context, i) {
-                      final ruta = _recientes[i];
-                      return ListTile(
-                        leading: const Icon(Icons.description),
-                        title: Text(ruta.split('/').last),
-                        subtitle: Text(ruta),
-                      );
-                    },
-                  ),
+                    ? const Center(child: Text('Sin archivos recientes'))
+                    : ListView.builder(
+                        itemCount: _recientes.length,
+                        itemBuilder: (context, i) {
+                          final ruta = _recientes[i];
+                          return ListTile(
+                            leading: const Icon(Icons.description),
+                            title: Text(ruta.split('/').last),
+                            subtitle: Text(ruta),
+                          );
+                        },
+                      ),
           ),
         ],
       ),

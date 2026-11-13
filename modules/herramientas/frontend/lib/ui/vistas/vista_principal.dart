@@ -80,7 +80,6 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                       ),
                     ],
                   ),
-
                 ],
               ),
             ),
@@ -167,5 +166,4 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
   Widget build(BuildContext context) {
     return _contenidoPrincipal();
   }
-
 }

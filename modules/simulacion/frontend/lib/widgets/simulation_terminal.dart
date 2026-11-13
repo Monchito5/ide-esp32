@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 /// Terminal de consola para la simulacion.
 /// Muestra la salida UART y permite enviar comandos al dispositivo virtual.
 class SimulationTerminal extends StatefulWidget {
-  const SimulationTerminal({
-    super.key,
-    required this.sesionId,
-  });
+  const SimulationTerminal({super.key, required this.sesionId});
 
   final String sesionId;
 
@@ -74,7 +71,9 @@ class _SimulationTerminalState extends State<SimulationTerminal> {
                     child: Text(
                       _lineas[i],
                       style: TextStyle(
-                        color: esComando ? Colors.cyan : const Color(0xFF8DC63F),
+                        color: esComando
+                            ? Colors.cyan
+                            : const Color(0xFF8DC63F),
                         fontFamily: 'monospace',
                         fontSize: 11,
                       ),
