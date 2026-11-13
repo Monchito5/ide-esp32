@@ -3,19 +3,24 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../nucleo/acciones_ayuda.dart';
 import '../../nucleo/registro_modulos.dart';
 import '../temas/tema_ide.dart';
 
-/// Layout maestro rediseñado del IDE para escritorio (Estilo Arduino/VSCode).
+/// Layout maestro rediseñado del IDE para escritorio.
 class LayoutPrincipal extends StatefulWidget {
   const LayoutPrincipal({
     super.key,
     required this.registro,
     this.titulo = 'IDE ESP32-S31 — Sketch sin título',
+    this.accionesAyuda,
   });
 
   final RegistroModulos registro;
   final String titulo;
+
+  /// Acciones del modulo de Ayuda; si es null el menu solo registra el evento.
+  final AccionesAyuda? accionesAyuda;
 
   @override
   State<LayoutPrincipal> createState() => _LayoutPrincipalState();
@@ -268,10 +273,11 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   'Monitor Serie',
                   'Recargar datos',
                 ]),
-                _buildMenuButton(
-                    context, 'Ayuda', ['Documentación', 'Acerca de']),
+                _buildMenuButton(context, 'Ayuda',
+                    ['Documentación', 'Preguntas frecuentes', 'Acerca de']),
                 const Spacer(),
-                if (modulos.length > 1)
+                if (modulos.length > 1 &&
+                    MediaQuery.sizeOf(context).width >= 900)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: DropdownButton<int>(
@@ -604,15 +610,19 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
           return PopupMenuItem<String>(
             value: opcion,
             child: SizedBox(
-              width: 140,
+              width: 190,
               child: Row(
                 children: [
-                  Text(opcion, style: const TextStyle(fontSize: 12)),
-                  if (tieneSubmenu) ...[
-                    const Spacer(),
+                  Expanded(
+                    child: Text(
+                      opcion,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  if (tieneSubmenu)
                     const Icon(Icons.chevron_right,
                         size: 14, color: Colors.grey),
-                  ],
                 ],
               ),
             ),
@@ -845,6 +855,23 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
   }
 
   void _manejarMenuAccion(BuildContext context, String titulo, String valor) {
+    if (titulo == 'Ayuda') {
+      final AccionesAyuda? acciones = widget.accionesAyuda;
+      if (acciones == null) {
+        _agregarLog('Módulo de Ayuda no disponible.');
+        return;
+      }
+      if (valor == 'Documentación') {
+        acciones.abrirDocumentacion?.call(context);
+      } else if (valor == 'Preguntas frecuentes') {
+        acciones.abrirPreguntasFrecuentes?.call(context);
+      } else if (valor == 'Acerca de') {
+        acciones.abrirAcercaDe?.call(context);
+      } else {
+        _agregarLog('Menú [Ayuda] -> $valor');
+      }
+      return;
+    }
     if (titulo == 'Herramientas') {
       if (valor == 'Placa') {
         _mostrarDialogoPlaca(context);
