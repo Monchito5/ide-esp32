@@ -19,6 +19,8 @@ dependencies:
     path: ../../modules/ayuda/frontend
   archivo_ui:
     path: ../../modules/archivo/frontend
+  editor_ui:
+    path: ../../modules/editor/frontend
 
 dev_dependencies:
   flutter_test:

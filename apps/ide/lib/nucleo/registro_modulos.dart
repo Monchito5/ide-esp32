@@ -5,6 +5,7 @@
 
 import 'package:archivo_ui/archivo_ui.dart';
 import 'package:ayuda_ui/ayuda_ui.dart';
+import 'package:editor_ui/editor_ui.dart';
 import 'package:herramientas_ui/herramientas_ui.dart';
 import 'package:ide_core/ide_core.dart';
 import 'package:simulacion_ui/simulacion_ui.dart';
@@ -17,9 +18,9 @@ import 'package:simulacion_ui/simulacion_ui.dart';
 List<ModuloIde> construirModulos() {
   return <ModuloIde>[
     ModuloArchivo(),
+    ModuloEditor(),
     ModuloHerramientas(),
     const ModuloAyuda(),
     ModuloSimulacion(),
-    // ModuloOtroEquipo(),
   ];
 }

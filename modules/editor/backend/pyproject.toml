@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "editor-backend"
+version = "1.0.0"
+description = "Modulo Editor de Codigo para el IDE ESP32 (Equipo Rojo)."
+requires-python = ">=3.11"
+
+# Dependencias centralizadas en requirements.txt
+dependencies = []
+
+[tool.setuptools]
+packages = ["editor_backend", "editor_backend.controllers"]
+package-dir = {"" = "."}
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "black"
+known_first_party = ["editor_backend", "ide_core"]
+
+[tool.pytest.ini_options]
+testpaths = ["pruebas"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

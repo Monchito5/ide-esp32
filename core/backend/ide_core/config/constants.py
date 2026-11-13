@@ -32,5 +32,6 @@ MODULOS_REGISTRADOS = [
     "archivo_backend.modulo",
     "simulacion_backend.modulo",
     "sketch_backend.modulo",
+    "editor_backend.modulo",
 ]
 

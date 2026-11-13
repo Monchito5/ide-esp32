@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contrato API - Modulo Editor (Equipo Rojo)",
+  "version": "1.0.0",
+  "prefijo": "/api/v1/editor",
+  "endpoints": {
+    "POST /formato": {
+      "solicitud": { "codigo": "", "tab_size": 2 },
+      "respuesta": { "exitoso": true, "codigo_formateado": "", "error": "" }
+    },
+    "POST /buscar-archivos": {
+      "solicitud": { "termino": "", "directorio": "", "sensible_mayusculas": false, "palabra_completa": false },
+      "respuesta": { "total_coincidencias": 0, "archivos": [] }
+    },
+    "POST /reemplazar-archivos": {
+      "solicitud": { "termino": "", "reemplazo": "", "directorio": "", "sensible_mayusculas": false },
+      "respuesta": { "archivos_modificados": 0, "total_reemplazos": 0, "detalles": [] }
+    },
+    "GET /configuracion": {
+      "respuesta": { "tamanio_fuente": 14, "tamanio_tabulacion": 2, "usar_espacios": true, "tema": "monokai" }
+    },
+    "PUT /configuracion": {
+      "solicitud": { "tamanio_fuente": 14, "tamanio_tabulacion": 2, "usar_espacios": true, "tema": "monokai" },
+      "respuesta": { "exitoso": true, "mensaje": "" }
+    }
+  }
+}
