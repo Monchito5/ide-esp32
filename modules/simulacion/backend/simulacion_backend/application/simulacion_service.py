@@ -48,7 +48,7 @@ class SimulacionService:
                 "frecuencia_mhz": 240,
                 "flash_mb": 16,
                 "psram_mb": 8,
-                "motores_soportados": ["esp_emulator", "qemu"],
+                "motores_soportados": ["esp_emulator"],
             },
             {
                 "id": "ESP32",

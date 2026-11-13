@@ -36,7 +36,10 @@ class _SimulationControlsState extends State<SimulationControls> {
     }
   }
 
-  Future<void> _ejecutarAccion(String accion, Future<Map<String, dynamic>> future) async {
+  Future<void> _ejecutarAccion(
+    String accion,
+    Future<ResultadoApi<Map<String, dynamic>>> future,
+  ) async {
     setState(() => _cargando = true);
     final r = await future;
     setState(() => _cargando = false);

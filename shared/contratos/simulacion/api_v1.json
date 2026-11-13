@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contrato API - Modulo Simulacion",
+  "version": "1.0.0",
+  "prefijo": "/api/v1/simulacion",
+  "endpoints": {
+    "GET /motores": {
+      "respuesta": {
+        "motores": [
+          {
+            "id": "esp_emulator",
+            "nombre": "ESP Emulator",
+            "version": "1.0.0",
+            "soporta_wasm": true,
+            "soporta_cli": true,
+            "chips_soportados": ["ESP32-S3", "ESP32", "ESP32-C3"],
+            "descripcion": "Emulador oficial de Espressif para ESP32"
+          }
+        ]
+      }
+    },
+    "GET /chips": {
+      "respuesta": {
+        "chips": [
+          {
+            "id": "ESP32-S3",
+            "nombre": "ESP32-S3",
+            "arquitectura": "Xtensa Dual-Core 32-bit LX7",
+            "frecuencia_mhz": 240,
+            "flash_mb": 16,
+            "psram_mb": 8,
+            "motores_soportados": ["esp_emulator"]
+          },
+          {
+            "id": "ESP32",
+            "nombre": "ESP32",
+            "arquitectura": "Xtensa Dual-Core 32-bit LX6",
+            "frecuencia_mhz": 240,
+            "flash_mb": 4,
+            "psram_mb": 0,
+            "motores_soportados": ["esp_emulator"]
+          },
+          {
+            "id": "ESP32-C3",
+            "nombre": "ESP32-C3",
+            "arquitectura": "RISC-V Single-Core 32-bit",
+            "frecuencia_mhz": 160,
+            "flash_mb": 4,
+            "psram_mb": 0,
+            "motores_soportados": ["esp_emulator"]
+          }
+        ]
+      }
+    },
+    "GET /sesiones": {
+      "respuesta": {
+        "sesiones": [
+          {
+            "sesion_id": "string",
+            "nombre": "string",
+            "chip": "string",
+            "motor": "string",
+            "estado": "string",
+            "fecha_creacion": "string"
+          }
+        ]
+      }
+    },
+    "POST /sesiones": {
+      "peticion": {
+        "chip": "string",
+        "motor": "string",
+        "nombre": "string opcional",
+        "sesion_id": "string opcional"
+      },
+      "respuesta": {
+        "sesion_id": "string",
+        "nombre": "string",
+        "chip": "string",
+        "motor": "string",
+        "estado": "string"
+      }
+    },
+    "GET /sesiones/{sesion_id}": {
+      "respuesta": {
+        "sesion_id": "string",
+        "nombre": "string",
+        "chip": "string",
+        "motor": "string",
+        "estado": "string",
+        "fecha_creacion": "string",
+        "firmware_cargado": "string opcional",
+        "informacion_chip": {}
+      }
+    },
+    "POST /sesiones/{sesion_id}/iniciar": {
+      "respuesta": {
+        "sesion_id": "string",
+        "estado": "string"
+      }
+    },
+    "POST /sesiones/{sesion_id}/detener": {
+      "respuesta": {
+        "sesion_id": "string",
+        "estado": "string"
+      }
+    },
+    "POST /sesiones/{sesion_id}/reiniciar": {
+      "respuesta": {
+        "sesion_id": "string",
+        "estado": "string"
+      }
+    },
+    "POST /sesiones/{sesion_id}/flashear": {
+      "peticion": {
+        "archivo": "string",
+        "direccion": "string",
+        "version": "string opcional"
+      },
+      "respuesta": {
+        "sesion_id": "string",
+        "estado": "string",
+        "firmware_cargado": "string"
+      }
+    },
+    "POST /sesiones/{sesion_id}/comandos": {
+      "peticion": {
+        "comando": "string"
+      },
+      "respuesta": {
+        "comando": "string",
+        "respuesta": "string"
+      }
+    },
+    "POST /sesiones/{sesion_id}/componentes": {
+      "peticion": {
+        "id": "string",
+        "tipo": "string",
+        "puerto": "string"
+      },
+      "respuesta": {
+        "id": "string",
+        "tipo": "string",
+        "puerto": "string",
+        "estado": "string"
+      }
+    },
+    "GET /sesiones/{sesion_id}/reportes": {
+      "respuesta": {
+        "sesion_id": "string",
+        "nombre": "string",
+        "chip": "string",
+        "motor": "string",
+        "estado": "string",
+        "firmware": {},
+        "informacion_chip": {},
+        "componentes": [],
+        "estadisticas": {},
+        "fecha_creacion": "string",
+        "fecha_ultimo_cambio": "string"
+      }
+    }
+  },
+  "webSocket": {
+    "ruta": "/api/v1/simulacion/sesiones/{sesion_id}/stream",
+    "eventos": [
+      "estado",
+      "datos_uart",
+      "error"
+    ]
+  }
+}
