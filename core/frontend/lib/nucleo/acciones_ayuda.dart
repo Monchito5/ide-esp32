@@ -14,6 +14,8 @@ class AccionesAyuda {
     this.abrirDocumentacion,
     this.abrirPreguntasFrecuentes,
     this.abrirAcercaDe,
+    this.abrirCreditos,
+    this.abrirEnlacesRapidos,
   });
 
   /// Abre el centro de documentacion y enlaces.
@@ -25,9 +27,15 @@ class AccionesAyuda {
   /// Abre la ventana modal "Acerca de".
   final AccionAyuda? abrirAcercaDe;
 
+  final AccionAyuda? abrirCreditos;
+
+  final AccionAyuda? abrirEnlacesRapidos;
+
   /// Indica si al menos una accion esta disponible.
   bool get disponible =>
       abrirDocumentacion != null ||
       abrirPreguntasFrecuentes != null ||
-      abrirAcercaDe != null;
+      abrirAcercaDe != null ||
+      abrirCreditos != null ||
+      abrirEnlacesRapidos != null;
 }

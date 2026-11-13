@@ -21,7 +21,6 @@ class VistaPrincipal extends StatefulWidget {
 class _VistaPrincipalState extends State<VistaPrincipal> {
   List<Map<String, dynamic>> _puertos = const [];
   String _estado = 'Verificando backend...';
-  Map<String, dynamic> _infoIde = {};
   bool _moduloActivo = false;
 
   @override
@@ -38,13 +37,11 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
       return;
     }
 
-    // Obtener informacion del modulo y verificar si esta activo
-    final infoModulo = await widget.ideApi.infoModuloHerramientas();
+    // Verificar si el modulo esta activo
     final moduloActivo = await widget.ideApi.moduloActivo('herramientas');
 
     setState(() {
       _puertos = rPuertos.data ?? const [];
-      _infoIde = infoModulo;
       _moduloActivo = moduloActivo;
       _estado =
           'Puertos detectados: ${_puertos.length} | Modulo: ${moduloActivo ? "Activo" : "Inactivo"}';
@@ -83,17 +80,7 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                       ),
                     ],
                   ),
-                  if (_infoIde.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Nombre: ${_infoIde['nombre'] ?? 'N/A'}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    Text(
-                      'Version: ${_infoIde['version'] ?? 'N/A'}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+
                 ],
               ),
             ),

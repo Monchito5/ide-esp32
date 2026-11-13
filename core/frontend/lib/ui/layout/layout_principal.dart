@@ -1,4 +1,4 @@
-// Archivo: core/frontend/lib/ui/layout/layout_principal.dart
+﻿// Archivo: core/frontend/lib/ui/layout/layout_principal.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -27,7 +27,6 @@ class LayoutPrincipal extends StatefulWidget {
 }
 
 class _LayoutPrincipalState extends State<LayoutPrincipal> {
-  int _indiceModulo = 0;
   int _indiceNavRail = 0;
   String _placaSeleccionada = 'ESP32-S31 Dev Module';
   String _puertoSeleccionado = 'Buscando...';
@@ -118,8 +117,6 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
 
   @override
   Widget build(BuildContext context) {
-    final modulos = widget.registro.modulos;
-    final actual = modulos.isNotEmpty ? modulos[_indiceModulo] : null;
     final bool esSimulacion = _modoOperacion == 'Modo Simulación';
 
     return Scaffold(
@@ -274,29 +271,8 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   'Recargar datos',
                 ]),
                 _buildMenuButton(context, 'Ayuda',
-                    ['Documentación', 'Preguntas frecuentes', 'Acerca de']),
+                    ['Documentación', 'Preguntas frecuentes', 'Créditos', 'Acerca de', 'Enlaces rápidos']),
                 const Spacer(),
-                if (modulos.length > 1 &&
-                    MediaQuery.sizeOf(context).width >= 900)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: DropdownButton<int>(
-                      value: _indiceModulo,
-                      isDense: true,
-                      underline: const SizedBox(),
-                      items: [
-                        for (int i = 0; i < modulos.length; i++)
-                          DropdownMenuItem(
-                            value: i,
-                            child: Text(
-                              'Módulo: ${modulos[i].nombre}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                      ],
-                      onChanged: (i) => setState(() => _indiceModulo = i ?? 0),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -356,7 +332,7 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                 const VerticalDivider(width: 1, thickness: 1),
                 // Panel de Código y Consola
                 Expanded(
-                  flex: 3,
+                  flex: 1,
                   child: Column(
                     children: [
                       // Editor de Código
@@ -452,36 +428,6 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                     ],
                   ),
                 ),
-                // Panel derecho: Vista de Módulo o Diseñador de Circuitos en Modo Simulación
-                const VerticalDivider(width: 1),
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    color: Colors.white,
-                    child: esSimulacion
-                        ? _buildPanelCircuitoSimulacion()
-                        : (actual != null
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8),
-child: Text(
-          actual.nombre,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(child: actual.construirVista(context)),
-                                ],
-                              )
-                            : const Center(
-                                child: Text('Sin módulo activo'),
-                              )),
-                  ),
-                ),
               ],
             ),
           ),
@@ -531,81 +477,6 @@ child: Text(
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPanelCircuitoSimulacion() {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.electrical_services,
-                  color: Colors.orange, size: 20),
-              const SizedBox(width: 6),
-              const Text(
-                'Diseño de Circuito Electrónico',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              ElevatedButton.icon(
-                onPressed: () {
-                  _ejecutarSimulacionCircuito();
-                },
-                icon: const Icon(Icons.play_arrow, size: 14),
-                label: const Text('Probar', style: TextStyle(fontSize: 11)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Componentes virtuales y conexiones GPIO:',
-            style: TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView(
-              children: [
-                _buildItemComponenteCircuito(
-                    'ESP32-S3 Core', Icons.memory, Colors.blueGrey),
-                _buildItemComponenteCircuito(
-                    'LED RGB / GPIO 2', Icons.lightbulb, Colors.amber),
-                _buildItemComponenteCircuito(
-                    'Sensor DHT22', Icons.thermostat, Colors.blue),
-                _buildItemComponenteCircuito('Resistencia & Pulsador',
-                    Icons.settings_input_component, Colors.purple),
-                _buildItemComponenteCircuito(
-                    'Pantalla OLED I2C', Icons.tv, Colors.teal),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemComponenteCircuito(
-      String nombre, IconData icono, Color color) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      elevation: 1,
-      child: ListTile(
-        leading: Icon(icono, color: color, size: 20),
-        title: Text(nombre,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-        subtitle:
-            const Text('Bus GPIO virtual', style: TextStyle(fontSize: 10)),
-        trailing:
-            const Icon(Icons.drag_indicator, size: 16, color: Colors.grey),
       ),
     );
   }
@@ -880,10 +751,12 @@ child: Text(
         acciones.abrirDocumentacion?.call(context);
       } else if (valor == 'Preguntas frecuentes') {
         acciones.abrirPreguntasFrecuentes?.call(context);
+      } else if (valor == 'Créditos') {
+        acciones.abrirCreditos?.call(context);
       } else if (valor == 'Acerca de') {
         acciones.abrirAcercaDe?.call(context);
-      } else {
-        _agregarLog('Menú [Ayuda] -> $valor');
+      } else if (valor == 'Enlaces rápidos') {
+        acciones.abrirEnlacesRapidos?.call(context);
       }
       return;
     }
