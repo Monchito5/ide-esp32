@@ -455,7 +455,22 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                     child: esSimulacion
                         ? _buildPanelCircuitoSimulacion()
                         : (actual != null
-                            ? actual.construirVista(context)
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+child: Text(
+          actual.nombre,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(child: actual.construirVista(context)),
+                                ],
+                              )
                             : const Center(
                                 child: Text('Sin módulo activo'),
                               )),
