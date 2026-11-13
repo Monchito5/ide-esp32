@@ -33,20 +33,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Instalar core y modulo herramientas (editable)
+      - name: Instalar core y modulos (editable)
         run: |
           pip install -e core/backend
           pip install -e modules/herramientas/backend
+          pip install -e modules/editor/backend
 
       - name: Verificar ausencia de __init__.py
         run: |
           python -c "import pathlib; ign = {'venv', '.venv', '.git', 'build', 'dist', '.pytest_cache'}; matches = [p for p in pathlib.Path('.').rglob('__init__.py') if not any(i in p.parts for i in ign)]; print(matches); exit(1 if matches else 0)"
 
       - name: Formato (black)
-        run: black --check core/backend modules/herramientas/backend
+        run: black --check core/backend modules/herramientas/backend modules/editor/backend
 
       - name: Imports (isort)
-        run: isort --check-only core/backend modules/herramientas/backend
+        run: isort --check-only core/backend modules/herramientas/backend modules/editor/backend
 
       - name: Pruebas core
         working-directory: core/backend
@@ -54,4 +55,8 @@ jobs:
 
       - name: Pruebas modulo herramientas
         working-directory: modules/herramientas/backend
+        run: pytest pruebas/ -v
+
+      - name: Pruebas modulo editor
+        working-directory: modules/editor/backend
         run: pytest pruebas/ -v

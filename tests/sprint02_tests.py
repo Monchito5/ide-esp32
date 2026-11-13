@@ -83,7 +83,14 @@ def test_modulo_registrar():
     registrar(app)
     
     # Verificar que la app tiene rutas adicionales
-    route_paths = [getattr(r, 'path', '') for r in app.routes]
+    route_paths = []
+    for r in app.routes:
+        if getattr(r, 'path', ''):
+            route_paths.append(getattr(r, 'path', ''))
+        if hasattr(r, 'original_router'):
+            for sub_r in getattr(r.original_router, 'routes', []):
+                if getattr(sub_r, 'path', ''):
+                    route_paths.append(getattr(sub_r, 'path', ''))
     assert any('herramientas' in str(p) for p in route_paths)
     
     print('test_modulo_registrar PASSED')
