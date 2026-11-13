@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resultado de compilación Sketch para Equipo Azul",
+  "type": "object",
+  "required": ["success", "errors", "artifacts", "exit_code"],
+  "properties": {
+    "success": {"type": "boolean"},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {"type": "array", "items": {"type": "string"}},
+    "exit_code": {"type": ["integer", "null"]}
+  },
+  "additionalProperties": true
+}
