@@ -1,4 +1,4 @@
-﻿// Archivo: core/frontend/lib/ui/layout/layout_principal.dart
+// Archivo: core/frontend/lib/ui/layout/layout_principal.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -270,8 +270,13 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   'Monitor Serie',
                   'Recargar datos',
                 ]),
-                _buildMenuButton(context, 'Ayuda',
-                    ['Documentación', 'Preguntas frecuentes', 'Créditos', 'Acerca de', 'Enlaces rápidos']),
+                _buildMenuButton(context, 'Ayuda', [
+                  'Documentación',
+                  'Preguntas frecuentes',
+                  'Créditos',
+                  'Acerca de',
+                  'Enlaces rápidos'
+                ]),
                 const Spacer(),
               ],
             ),

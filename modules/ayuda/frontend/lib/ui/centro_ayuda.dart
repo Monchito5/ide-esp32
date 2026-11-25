@@ -245,6 +245,7 @@ class _TarjetaEnlace extends StatelessWidget {
     return Material(
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
+        onTap: () => abrirEnlaceExterno(context, enlace.url),
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(12),

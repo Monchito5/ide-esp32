@@ -146,7 +146,8 @@ class _ItemFaq extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: TextButton.icon(
-                    onPressed: null,
+                    onPressed: () =>
+                        abrirEnlaceExterno(context, pregunta.enlace!),
                     icon: const Icon(Icons.open_in_new, size: 15),
                     label: Text(
                       pregunta.textoEnlace ?? 'Más información',
