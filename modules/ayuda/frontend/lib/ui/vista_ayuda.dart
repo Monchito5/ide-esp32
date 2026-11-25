@@ -215,6 +215,7 @@ class _EnlaceCompacto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      onTap: () => abrirEnlaceExterno(context, enlace.url),
       borderRadius: BorderRadius.circular(6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),

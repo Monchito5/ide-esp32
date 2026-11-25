@@ -2,6 +2,7 @@
 //
 // Componentes visuales compartidos por las ventanas del modulo de Ayuda.
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Paleta del modulo, alineada con el tema base del IDE.
 class PaletaAyuda {
@@ -283,6 +284,29 @@ class AvatarInicial extends StatelessWidget {
           fontSize: tamano * 0.42,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+/// Abre un enlace externo y avisa si el sistema no pudo hacerlo.
+Future<void> abrirEnlaceExterno(BuildContext context, String url) async {
+  final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
+  bool abierto = false;
+  try {
+    abierto = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.platformDefault,
+    );
+  } catch (_) {
+    abierto = false;
+  }
+
+  if (!abierto) {
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text('No se pudo abrir el enlace: $url'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
