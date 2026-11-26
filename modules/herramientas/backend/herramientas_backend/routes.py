@@ -2,26 +2,26 @@
 """Rutas del modulo Herramientas."""
 
 from fastapi import APIRouter
-from modules.herramientas.backend.herramientas_backend.controllers.arduino import (
+from herramientas_backend.controllers.arduino import (
     listar_placas,
     obtener_version,
 )
-from modules.herramientas.backend.herramientas_backend.controllers.esp_idf import (
+from herramientas_backend.controllers.esp_idf import (
     get_esp_idf_version,
     get_sdkconfig,
     menuconfig,
 )
-from modules.herramientas.backend.herramientas_backend.controllers.platformio import (
+from herramientas_backend.controllers.platformio import (
     platformio_compilar,
     platformio_estado,
     platformio_flashear,
     platformio_iniciar,
     platformio_puertos_disponibles,
 )
-from modules.herramientas.backend.herramientas_backend.controllers.puerto import (
+from herramientas_backend.controllers.puerto import (
     listar_puertos,
 )
-from modules.herramientas.backend.herramientas_backend.controllers.report import (
+from herramientas_backend.controllers.report import (
     resumen_flash,
 )
 

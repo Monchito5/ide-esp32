@@ -8,7 +8,7 @@ de arduino-cli a formato JSON para la API del IDE.
 
 import subprocess
 
-from modules.herramientas.backend.herramientas_backend.models import (  # type: ignore
+from herramientas_backend.models import (  # type: ignore
     Herramienta,
     PuertoSerie,
 )

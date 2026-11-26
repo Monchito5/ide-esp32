@@ -6,7 +6,7 @@ try:
 except ImportError:  # pragma: no cover
     list_ports = None
 
-from modules.herramientas.backend.herramientas_backend.models import Puerto
+from herramientas_backend.models import Puerto
 
 
 def listar_puertos() -> dict:
