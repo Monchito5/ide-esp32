@@ -1,7 +1,7 @@
 // Archivo: modules/simulacion/frontend/lib/widgets/virtual_components.dart
 import 'package:flutter/material.dart';
 
-import '../../api_simulacion.dart';
+import '../api_simulacion.dart';
 
 /// Widget de componentes virtuales para la simulacion ESP32.
 class VirtualComponents extends StatefulWidget {
@@ -142,7 +142,7 @@ class _VirtualComponentsState extends State<VirtualComponents> {
       case 'sensor':
         return Icons.sensors;
       case 'display':
-        return Icons.display;
+        return Icons.monitor;
       default:
         return Icons.devices;
     }

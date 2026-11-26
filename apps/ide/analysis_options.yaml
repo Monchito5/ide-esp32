@@ -4,6 +4,7 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - web/**
   errors:
     deprecated_member_use: ignore
     require_trailing_commas: ignore

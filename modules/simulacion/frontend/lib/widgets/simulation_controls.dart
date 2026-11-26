@@ -1,7 +1,8 @@
 // Archivo: modules/simulacion/frontend/lib/widgets/simulation_controls.dart
 import 'package:flutter/material.dart';
 
-import '../../api_simulacion.dart';
+import '../api_simulacion.dart';
+import '../services/simulation_api.dart';
 
 /// Controles de simulacion: iniciar, detener, reiniciar, flashear.
 class SimulationControls extends StatefulWidget {

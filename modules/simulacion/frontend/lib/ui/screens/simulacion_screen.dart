@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../../api_simulacion.dart';
 import '../../services/simulation_api.dart';
-import '../widgets/simulation_controls.dart';
-import '../widgets/simulation_terminal.dart';
-import '../widgets/virtual_components.dart';
-import '../widgets/virtual_board.dart';
+import '../../widgets/simulation_controls.dart';
+import '../../widgets/simulation_terminal.dart';
+import '../../widgets/virtual_components.dart';
+import '../../widgets/virtual_board.dart';
 
 /// Pantalla principal del modulo Simulacion.
 /// Permite crear, administrar y monitorear sesiones de simulacion ESP32.
@@ -130,7 +130,7 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
     }
   }
 
-  void _detenerSesion(String sesionId) async {
+  Future<void> _detenerSesion(String sesionId) async {
     final r = await widget.api.detenerSesion(sesionId);
     if (!r.ok) {
       setState(() => _mensaje = 'Error: ${r.error}');
@@ -327,7 +327,6 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
                   ),
                   const SizedBox(height: 16),
                   SimulationTerminal(
-                    api: widget.api,
                     sesionId: _sesionSeleccionada!,
                   ),
                 ],
