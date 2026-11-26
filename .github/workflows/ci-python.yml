@@ -38,6 +38,9 @@ jobs:
           pip install -e core/backend
           pip install -e modules/herramientas/backend
           pip install -e modules/editor/backend
+          pip install -e modules/sketch/backend
+          pip install -e modules/simulacion/backend
+          pip install -e modules/azul/backend
 
       - name: Verificar ausencia de __init__.py
         run: |
@@ -59,4 +62,16 @@ jobs:
 
       - name: Pruebas modulo editor
         working-directory: modules/editor/backend
+        run: pytest pruebas/ -v
+
+      - name: Pruebas modulo sketch
+        working-directory: modules/sketch/backend
+        run: pytest pruebas/ -v
+
+      - name: Pruebas modulo azul
+        working-directory: modules/azul/backend
+        run: pytest pruebas/ -v
+
+      - name: Pruebas modulo simulacion
+        working-directory: modules/simulacion/backend
         run: pytest pruebas/ -v

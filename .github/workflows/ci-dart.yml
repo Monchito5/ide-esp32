@@ -53,10 +53,42 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed .
-      - run: flutter analyze
-      - run: flutter test
+        - run: flutter pub get
+        - run: dart format --output=none --set-exit-if-changed .
+        - run: flutter analyze
+        - run: flutter test
+
+  ayuda-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/ayuda/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+        - run: flutter pub get
+        - run: dart format --output=none --set-exit-if-changed .
+        - run: flutter analyze
+        - run: flutter test
+
+  simulacion-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/simulacion/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+        - run: flutter pub get
+        - run: dart format --output=none --set-exit-if-changed .
+        - run: flutter analyze
+        - run: flutter test
 
   ide-app:
     runs-on: ubuntu-latest

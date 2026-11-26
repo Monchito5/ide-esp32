@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contrato API Modulo Archivo v1",
+  "description": "Contrato para operaciones de archivos, puente ESP-IDF y gestion de proyectos en el IDE ESP32",
+  "version": "1.0.0",
+  "endpoints": {
+    "/api/v1/archivo/espidf/preparar": {
+      "method": "POST",
+      "summary": "Recibe codigo fuente y estructura proyecto en formato ESP-IDF",
+      "request": {
+        "content_type": "multipart/form-data",
+        "parameters": {
+          "project_name": { "type": "string", "default": "esp32_sketch" },
+          "files": { "type": "array", "items": { "type": "string", "format": "binary" } }
+        }
+      },
+      "response": {
+        "status": 200,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "success": { "type": "boolean" },
+            "project_id": { "type": "string" },
+            "project_name": { "type": "string" },
+            "espidf_directory": { "type": "string" },
+            "main_cmakelists_path": { "type": "string" },
+            "root_cmakelists_path": { "type": "string" },
+            "received_files": { "type": "array", "items": { "type": "string" } },
+            "message": { "type": "string" }
+          },
+          "required": ["success", "project_id", "project_name", "espidf_directory"]
+        }
+      }
+    },
+    "/api/v1/archivo/espidf/{project_id}/ruta-compilador": {
+      "method": "GET",
+      "summary": "Entrega ruta absoluta del proyecto para el compilador Sketch",
+      "response": {
+        "status": 200,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "project_id": { "type": "string" },
+            "absolute_project_path": { "type": "string" },
+            "status": { "type": "string" }
+          }
+        }
+      }
+    },
+    "/api/v1/archivo/nuevo": {
+      "method": "POST",
+      "summary": "Crea nuevo sketch",
+      "response": { "status": 200, "schema": { "$ref": "#/definitions/ArchivoActionResponse" } }
+    },
+    "/api/v1/archivo/abrir": {
+      "method": "POST",
+      "summary": "Abre sketch existente",
+      "response": { "status": 200, "schema": { "$ref": "#/definitions/ArchivoActionResponse" } }
+    },
+    "/api/v1/archivo/guardar": {
+      "method": "POST",
+      "summary": "Guarda sketch actual",
+      "response": { "status": 200, "schema": { "$ref": "#/definitions/ArchivoActionResponse" } }
+    },
+    "/api/v1/archivo/preferencias": {
+      "method": "GET",
+      "summary": "Obtiene preferencias del modulo Archivo",
+      "response": { "status": 200, "schema": { "$ref": "#/definitions/ArchivoActionResponse" } }
+    }
+  },
+  "definitions": {
+    "ArchivoActionResponse": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "action": { "type": "string" },
+        "message": { "type": "string" },
+        "data": { "type": "object" }
+      },
+      "required": ["status", "action", "message"]
+    }
+  }
+}
