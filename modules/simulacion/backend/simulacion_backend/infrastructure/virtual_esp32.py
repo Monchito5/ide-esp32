@@ -48,13 +48,14 @@ class VirtualESP32:
             return True
 
         self._port = VirtualSerialPort(self.port_name, baudrate=self.baudrate)
+        self._port.set_on_data_received(self._process_uart_data)
         try:
-            self._port.open(baudrate=self.baudrate)
-            self._is_connected = True
-            self._stop_event.clear()
-            self._thread = threading.Thread(target=self._read_loop, daemon=True)
-            self._thread.start()
-            return True
+            if self._port.open(baudrate=self.baudrate):
+                self._is_connected = True
+                self._stop_event.clear()
+                return True
+            self._is_connected = False
+            return False
         except Exception:
             self._is_connected = False
             return False
@@ -118,23 +119,24 @@ class VirtualESP32:
             return "ERROR"
 
     def _handle_gpio_command(self, cmd: str) -> str:
-        """Procesa comandos de GPIO."""
-        parts = cmd.split()
-        if len(parts) < 3:
+        """Procesa comandos de GPIO: AT+GPIO<num>=WRITE,<val> o AT+GPIO<num>=READ."""
+        try:
+            if "=" in cmd:
+                pin_part, action_part = cmd.split("=", 1)
+                pin_str = pin_part.replace("AT+GPIO", "").strip()
+                pin_num = int(pin_str)
+                action_part = action_part.strip().upper()
+                if action_part.startswith("WRITE"):
+                    val_str = action_part.split(",")[1].strip()
+                    val = val_str in ("1", "HIGH", "TRUE")
+                    self.gpio_pins[pin_num] = val
+                    return "OK"
+                elif action_part == "READ":
+                    val = 1 if self.gpio_pins.get(pin_num, False) else 0
+                    return f"+GPIO{pin_num}:{val}\nOK"
             return "ERROR"
-
-        gpio_num = int(parts[1].replace("GPIO", "")) if parts[1].startswith("GPIO") else int(parts[1])
-
-        if parts[2] == "READ":
-            val = self.gpio_pins.get(gpio_num, False)
-            return f"+GPIO{self.gpio_pins.get(gpio_num, False)}\nOK"
-        elif parts[2] == "WRITE":
-            if len(parts) >= 4:
-                val = parts[3].upper() in ("1", "HIGH", "TRUE")
-                self.gpio_pins[gpio_num] = val
-                return "OK"
+        except Exception:
             return "ERROR"
-        return "ERROR"
 
     def _handle_flash_command(self, cmd: str) -> str:
         """Procesa comandos de flasheo."""
@@ -168,7 +170,8 @@ class VirtualESP32:
         """Envía datos por UART virtual."""
         if self._port and self._is_connected:
             try:
-                self._port.write(data.encode("utf-8"))
+                with self._port._lock:
+                    self._port._buffer += data.encode("utf-8")
             except Exception:
                 pass
 

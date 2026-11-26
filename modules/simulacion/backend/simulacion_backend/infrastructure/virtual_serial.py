@@ -45,19 +45,28 @@ class VirtualSerialPort:
         if self._is_open:
             return True
 
-        try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.settimeout(timeout)
-            self._socket.connect((self.host, self.port))
-            self._socket.settimeout(None)
+        if self.port > 0:
+            try:
+                self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self._socket.settimeout(timeout)
+                self._socket.connect((self.host, self.port))
+                self._socket.settimeout(None)
+                self._conn = self._socket
+                self._is_open = True
+                self._stop_event.clear()
+                self._read_thread = threading.Thread(target=self._read_loop, daemon=True)
+                self._read_thread.start()
+                return True
+            except Exception:
+                self._is_open = False
+                return False
+        else:
+            if self.port_name not in ("COM10", "COM11"):
+                self._is_open = False
+                return False
             self._is_open = True
             self._stop_event.clear()
-            self._read_thread = threading.Thread(target=self._read_loop, daemon=True)
-            self._read_thread.start()
             return True
-        except Exception:
-            self._is_open = False
-            return False
 
     def connect(self, baudrate: int = None, timeout: float = 1.0) -> bool:
         """Conecta al puerto virtual (alias de open())."""
@@ -103,13 +112,18 @@ class VirtualSerialPort:
 
     def write(self, data: bytes) -> int:
         """Escribe datos al puerto simulado."""
-        if not self._is_open or not self._conn:
+        if not self._is_open:
             raise IOError(f"Puerto {self.port_name} no está abierto")
-        try:
-            self._conn.sendall(data)
+        if self._conn:
+            try:
+                self._conn.sendall(data)
+                return len(data)
+            except Exception as exc:
+                raise IOError(f"Error escribiendo a {self.port_name}: {exc}")
+        else:
+            if self._on_data_received:
+                self._on_data_received(data)
             return len(data)
-        except Exception as exc:
-            raise IOError(f"Error escribiendo a {self.port_name}: {exc}")
 
     def read(self, size: int = 1, timeout: float = 1.0) -> bytes:
         """Lee datos del puerto simulado."""
