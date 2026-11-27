@@ -35,4 +35,3 @@ MODULOS_REGISTRADOS = [
     "editor_backend.modulo",
     "azul_backend.modulo",
 ]
-

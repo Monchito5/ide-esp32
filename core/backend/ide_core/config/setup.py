@@ -32,7 +32,9 @@ from ide_core.utils.logger import log_sistema
 # - Raiz del monorepo: permite from modules.herramientas.backend.....
 # - modules/*/backend: permite from herramientas_backend.modulo (top-level).
 _rutas_modulos = [str(DIRECTORIO_MONOREPO)]
-_rutas_modulos.extend(str(p) for p in sorted(DIRECTORIO_MONOREPO.glob("modules/*/backend")))
+_rutas_modulos.extend(
+    str(p) for p in sorted(DIRECTORIO_MONOREPO.glob("modules/*/backend"))
+)
 for _ruta_str in _rutas_modulos:
     if _ruta_str not in sys.path:
         sys.path.insert(0, _ruta_str)

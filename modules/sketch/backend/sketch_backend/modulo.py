@@ -1,7 +1,6 @@
 ﻿"""Punto de entrada del modulo Sketch."""
 
 from fastapi import FastAPI
-
 from sketch_backend.routes import router
 
 NOMBRE_MODULO = "sketch"

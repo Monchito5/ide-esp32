@@ -1,9 +1,7 @@
-
+import subprocess
 import sys
 import tempfile
 import unittest
-import subprocess
-
 from pathlib import Path
 from unittest.mock import patch
 
@@ -20,28 +18,20 @@ class TestCompilarProyecto(unittest.TestCase):
         self.proyecto.mkdir()
 
         (self.proyecto / "CMakeLists.txt").write_text(
-            "cmake_minimum_required(VERSION 3.16)",
-            encoding="utf-8"
+            "cmake_minimum_required(VERSION 3.16)", encoding="utf-8"
         )
 
         self.build = self.proyecto / "build"
         self.build.mkdir()
 
-        self.entorno_falso = (
-            "python.exe",
-            Path("idf.py"),
-            {},
-            None
-        )
+        self.entorno_falso = ("python.exe", Path("idf.py"), {}, None)
 
     def tearDown(self):
         self.temp_dir.cleanup()
 
     def test_proyecto_inexistente(self):
         with patch.object(backend, "preparar_entorno_idf") as preparar:
-            resultado = backend.compilar_proyecto(
-                self.proyecto / "inexistente"
-            )
+            resultado = backend.compilar_proyecto(self.proyecto / "inexistente")
 
         self.assertFalse(resultado["success"])
         self.assertIn("No existe la carpeta", resultado["error"])
@@ -60,40 +50,25 @@ class TestCompilarProyecto(unittest.TestCase):
 
     def test_timeout_invalido(self):
         with patch.object(
-            backend,
-            "preparar_entorno_idf",
-            return_value=self.entorno_falso
+            backend, "preparar_entorno_idf", return_value=self.entorno_falso
         ) as preparar:
-            resultado = backend.compilar_proyecto(
-                self.proyecto,
-                timeout=0
-            )
+            resultado = backend.compilar_proyecto(self.proyecto, timeout=0)
 
         self.assertFalse(resultado["success"])
         preparar.assert_not_called()
 
     def test_error_al_configurar_target(self):
         respuesta_falsa = subprocess.CompletedProcess(
-            args=[],
-            returncode=2,
-            stdout="",
-            stderr="target failed"
+            args=[], returncode=2, stdout="", stderr="target failed"
         )
 
         with patch.object(
-            backend,
-            "preparar_entorno_idf",
-            return_value=self.entorno_falso
+            backend, "preparar_entorno_idf", return_value=self.entorno_falso
         ), patch.object(
-            backend.subprocess,
-            "run",
-            return_value=respuesta_falsa
+            backend.subprocess, "run", return_value=respuesta_falsa
         ) as ejecutar:
 
-            resultado = backend.compilar_proyecto(
-                self.proyecto,
-                target="esp32"
-            )
+            resultado = backend.compilar_proyecto(self.proyecto, target="esp32")
 
         self.assertFalse(resultado["success"])
         self.assertIn("No se pudo configurar el objetivo", resultado["error"])
@@ -101,21 +76,12 @@ class TestCompilarProyecto(unittest.TestCase):
 
     def test_error_de_compilacion(self):
         respuesta_falsa = subprocess.CompletedProcess(
-            args=[],
-            returncode=1,
-            stdout="build failed",
-            stderr="compile error"
+            args=[], returncode=1, stdout="build failed", stderr="compile error"
         )
 
         with patch.object(
-            backend,
-            "preparar_entorno_idf",
-            return_value=self.entorno_falso
-        ), patch.object(
-            backend.subprocess,
-            "run",
-            return_value=respuesta_falsa
-        ):
+            backend, "preparar_entorno_idf", return_value=self.entorno_falso
+        ), patch.object(backend.subprocess, "run", return_value=respuesta_falsa):
 
             resultado = backend.compilar_proyecto(self.proyecto)
 
@@ -135,21 +101,12 @@ class TestCompilarProyecto(unittest.TestCase):
         (cmake_files / "ignorar.bin").write_bytes(b"ignorar")
 
         respuesta_falsa = subprocess.CompletedProcess(
-            args=[],
-            returncode=0,
-            stdout="build ok",
-            stderr=""
+            args=[], returncode=0, stdout="build ok", stderr=""
         )
 
         with patch.object(
-            backend,
-            "preparar_entorno_idf",
-            return_value=self.entorno_falso
-        ), patch.object(
-            backend.subprocess,
-            "run",
-            return_value=respuesta_falsa
-        ):
+            backend, "preparar_entorno_idf", return_value=self.entorno_falso
+        ), patch.object(backend.subprocess, "run", return_value=respuesta_falsa):
 
             resultado = backend.compilar_proyecto(self.proyecto)
 

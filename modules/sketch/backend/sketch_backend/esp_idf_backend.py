@@ -1,4 +1,3 @@
-
 """Backend de compilacion ESP-IDF para el modulo Sketch."""
 
 import argparse
@@ -8,58 +7,180 @@ import shutil
 import subprocess
 from pathlib import Path
 
-
 # Ruta predeterminada de ESP-IDF 6.1.
 # Si IDF_PATH existe en el entorno, se utiliza primero.
 IDF_PATH_PREDETERMINADO = Path(r"C:\espp\v6.1\esp-idf")
 
 
+def _raices_busqueda_espressif() -> list[Path]:
+    """Genera directorios candidatos donde EIM o el instalador de Espressif ubican ESP-IDF."""
+    candidatos: list[Path] = []
+
+    for var in ("IDF_PATH", "ESP_IDF_PATH"):
+        idf_path_env = os.environ.get(var)
+        if idf_path_env:
+            candidatos.append(Path(idf_path_env).expanduser())
+
+    espressif_env = os.environ.get("ESPRESSIF_PATH")
+    raices_eim: list[Path] = []
+    if espressif_env:
+        raices_eim.append(Path(espressif_env).expanduser())
+
+    home = Path.home()
+    candidatos.extend(
+        [
+            IDF_PATH_PREDETERMINADO,
+            Path(r"C:\esp\esp-idf"),
+            home / "esp" / "esp-idf",
+        ]
+    )
+
+    raices_eim.extend(
+        [
+            Path(r"E:\DATOS\PROGRAMAS\esp\.espressif"),
+            Path(r"C:\Espressif\frameworks"),
+            Path(r"C:\Espressif"),
+            Path(r"C:\espp"),
+            Path(r"E:\Espressif\frameworks"),
+            Path(r"E:\esp\.espressif"),
+            Path(r"D:\Espressif\frameworks"),
+            Path(r"D:\esp\.espressif"),
+            home / ".espressif" / "frameworks",
+            home / ".espressif",
+        ]
+    )
+
+    for base in raices_eim:
+        if base.is_dir():
+            if (base / "tools" / "idf.py").is_file():
+                candidatos.append(base)
+            for sub in sorted(base.glob("v*/esp-idf"), reverse=True):
+                if sub.is_dir():
+                    candidatos.append(sub)
+            for sub in sorted(base.glob("*esp-idf*"), reverse=True):
+                if sub.is_dir():
+                    candidatos.append(sub)
+
+    return candidatos
+
+
 def localizar_idf():
-    """Localiza la instalacion de ESP-IDF."""
-    candidatos = []
-
-    idf_path_env = os.environ.get("IDF_PATH")
-
-    if idf_path_env:
-        candidatos.append(Path(idf_path_env))
-
-    candidatos.append(IDF_PATH_PREDETERMINADO)
-
-    for candidato in candidatos:
-        if (candidato / "export.bat").is_file():
-            return candidato.resolve()
+    """Localiza la instalacion de Espressif ESP-IDF (incluyendo instalaciones EIM en C:/ y E:/)."""
+    for candidato in _raices_busqueda_espressif():
+        if os.name == "nt":
+            if (candidato / "export.bat").is_file() or (
+                candidato / "tools" / "idf.py"
+            ).is_file():
+                return candidato.resolve()
+        else:
+            if (candidato / "export.sh").is_file() or (
+                candidato / "tools" / "idf.py"
+            ).is_file():
+                return candidato.resolve()
 
     return None
 
 
+def _variables_eim_para_idf(idf_path: Path) -> dict[str, str]:
+    """Detecta estructura de Espressif Installation Manager (EIM) junto a esp-idf."""
+    extras: dict[str, str] = {"IDF_PATH": str(idf_path)}
+    contenedor_version = idf_path.parent
+    carpeta_tools = contenedor_version / "tools"
+
+    if carpeta_tools.is_dir():
+        if not os.environ.get("IDF_TOOLS_PATH"):
+            extras["IDF_TOOLS_PATH"] = str(contenedor_version)
+
+        if not os.environ.get("IDF_PYTHON_ENV_PATH"):
+            venvs = (
+                sorted((carpeta_tools / "python").glob("*/venv"), reverse=True)
+                if (carpeta_tools / "python").is_dir()
+                else []
+            )
+            if venvs:
+                extras["IDF_PYTHON_ENV_PATH"] = str(venvs[0])
+
+        constraints_en_raiz = list(contenedor_version.glob("espidf.constraints.*.txt"))
+        if not constraints_en_raiz and not os.environ.get(
+            "IDF_PYTHON_CHECK_CONSTRAINTS"
+        ):
+            extras["IDF_PYTHON_CHECK_CONSTRAINTS"] = "no"
+
+    return extras
+
+
 def preparar_entorno_idf():
-    """Ejecuta export.bat y recupera las variables de ESP-IDF."""
+    """Prepara y recupera las variables del entorno Espressif ESP-IDF (estandar y EIM)."""
     idf_path = localizar_idf()
 
     if idf_path is None:
-        return None, None, None, (
-            "No se encontro ESP-IDF. Verifica la instalacion "
-            "o configura la variable IDF_PATH."
+        idf_en_path = shutil.which("idf.py")
+        python_activo = shutil.which("python")
+        if idf_en_path and python_activo:
+            entorno_activo = os.environ.copy()
+            entorno_activo["PYTHONUTF8"] = "1"
+            entorno_activo["PYTHONIOENCODING"] = "utf-8"
+            return python_activo, Path(idf_en_path), entorno_activo, None
+
+        return (
+            None,
+            None,
+            None,
+            (
+                "No se encontro Espressif ESP-IDF. Verifica la instalacion "
+                "o configura la variable de entorno IDF_PATH."
+            ),
         )
 
-    export_bat = idf_path / "export.bat"
     idf_script = idf_path / "tools" / "idf.py"
 
     if not idf_script.is_file():
-        return None, None, None, (
-            f"No se encontro el archivo de ESP-IDF: {idf_script}"
-        )
+        return None, None, None, (f"No se encontro el archivo de ESP-IDF: {idf_script}")
 
-    # Configurar UTF-8, activar ESP-IDF y recuperar sus variables.
-    comando_entorno = (
-        f'chcp 65001 >nul && '
-        f'call "{export_bat}" >nul && '
-        f'set'
-    )
+    vars_base = os.environ.copy()
+    vars_base.update(_variables_eim_para_idf(idf_path))
+    vars_base["PYTHONUTF8"] = "1"
+    vars_base["PYTHONIOENCODING"] = "utf-8"
+
+    # En sistemas Linux/macOS (incluyendo CI), activar export.sh o entorno directo
+    if os.name != "nt":
+        export_sh = idf_path / "export.sh"
+        entorno = vars_base.copy()
+        if export_sh.is_file():
+            proc_posix = subprocess.run(
+                ["bash", "-c", f'source "{export_sh}" >/dev/null 2>&1 && env'],
+                env=entorno,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )
+            if proc_posix.returncode == 0:
+                for linea in proc_posix.stdout.splitlines():
+                    if "=" in linea:
+                        k, v = linea.split("=", 1)
+                        entorno[k] = v
+        python_exe = shutil.which("python3", path=entorno.get("PATH")) or shutil.which(
+            "python", path=entorno.get("PATH")
+        )
+        if not python_exe:
+            return None, None, None, "No se encontro interprete Python para ESP-IDF."
+        return python_exe, idf_script, entorno, None
+
+    export_bat = idf_path / "export.bat"
+    if not export_bat.is_file():
+        python_exe = shutil.which("python", path=vars_base.get("PATH"))
+        if python_exe:
+            return python_exe, idf_script, vars_base, None
+        return None, None, None, f"No se encontro export.bat en {idf_path}"
+
+    # Configurar UTF-8, activar ESP-IDF (con soporte EIM) y recuperar sus variables.
+    comando_entorno = f"chcp 65001 >nul && " f'call "{export_bat}" >nul && ' f"set"
 
     proceso_entorno = subprocess.run(
         comando_entorno,
         shell=True,
+        env=vars_base,
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -103,8 +224,11 @@ def preparar_entorno_idf():
     )
 
     if not python_exe:
-        return None, None, None, (
-            "ESP-IDF se activo, pero no se encontro su Python virtual."
+        return (
+            None,
+            None,
+            None,
+            ("ESP-IDF se activo, pero no se encontro su Python virtual."),
         )
 
     return python_exe, idf_script, entorno, None
@@ -176,9 +300,7 @@ def compilar_proyecto(ruta_proyecto, timeout=1800, target=None):
 
     try:
         # Preparar automaticamente el entorno ESP-IDF.
-        python_exe, idf_script, entorno, error_entorno = (
-            preparar_entorno_idf()
-        )
+        python_exe, idf_script, entorno, error_entorno = preparar_entorno_idf()
 
         if error_entorno:
             return crear_resultado(
@@ -262,8 +384,7 @@ def compilar_proyecto(ruta_proyecto, timeout=1800, target=None):
             bin_files = sorted(
                 str(archivo.resolve())
                 for archivo in build.rglob("*.bin")
-                if archivo.is_file()
-                and "CMakeFiles" not in archivo.parts
+                if archivo.is_file() and "CMakeFiles" not in archivo.parts
             )
 
         detalle_error = None

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Contrato API - Modulo Sketch (Compilacion Nativa Espressif ESP-IDF)",
+  "version": "1.0.0",
+  "prefijo": "/api/v1/sketch",
+  "endpoints": {
+    "POST /compilar-codigo": {
+      "solicitud": {
+        "codigo": "string",
+        "nombre_proyecto": "esp32_sketch",
+        "nombre_archivo": "main.c",
+        "target": "esp32s3",
+        "timeout": 600,
+        "incluir_base64": false
+      },
+      "respuesta": {
+        "success": true,
+        "status": "COMPILATION_SUCCESS",
+        "framework": "ESP-IDF",
+        "target": "esp32s3",
+        "project_id": "string",
+        "project_path": "string",
+        "result_summary": "string",
+        "compilation_logs": "string",
+        "errors": [],
+        "warnings": [],
+        "binaries": []
+      }
+    },
+    "POST /compilar": {
+      "solicitud": { "project_path": "string", "timeout": 1800, "target": "esp32s3" },
+      "respuesta": { "task_id": "string", "status": "pending", "result": null, "error": null }
+    },
+    "GET /tareas/{task_id}": {
+      "respuesta": { "task_id": "string", "status": "completed", "result": {}, "error": null }
+    },
+    "GET /estado": {
+      "respuesta": { "module": "sketch", "framework": "ESP-IDF", "tasks": {}, "total": 0 }
+    }
+  }
+}

@@ -75,7 +75,11 @@ class CompilerInputResultRequest(BaseModel):
     )
     include_base64: bool = Field(
         default=True,
-        description="Si es True, incluye el contenido Base64 de cada .binademas del enlace de descarga",
+        description="Si es True, incluye el contenido Base64 de cada .bin ademas del enlace de descarga",
+    )
+    target: str = Field(
+        default="esp32",
+        description="Target ESP-IDF (ej. esp32, esp32s2, esp32s3, esp32c3, esp32c6) para calcular offsets exactos",
     )
 
 

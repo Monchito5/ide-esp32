@@ -15,19 +15,30 @@ import uuid
 from pathlib import Path
 from typing import Dict, List
 
-from archivo_backend.config import (DEFAULT_SKETCH_TEMPLATE, ConfigManager,
-                                    ExamplesCatalog)
-from archivo_backend.schemas import (ArchivoActionResponse,
-                                     BuildAndFilesDeliveryResponse,
-                                     ClearRecentsResponse, CloseSketchRequest,
-                                     CompilerInputResultRequest,
-                                     ESPIDFProjectPreparedResponse,
-                                     GeneratedBinarySchema, OpenFileRequest,
-                                     OpenFolderRequest, PreferencesModel,
-                                     ReloadRequest, ResetPreferencesResponse,
-                                     SaveAsRequest, SaveFileRequest,
-                                     SketchInfoRequest, SketchInfoResponse,
-                                     TemplateResponse)
+from archivo_backend.config import (
+    DEFAULT_SKETCH_TEMPLATE,
+    ConfigManager,
+    ExamplesCatalog,
+)
+from archivo_backend.schemas import (
+    ArchivoActionResponse,
+    BuildAndFilesDeliveryResponse,
+    ClearRecentsResponse,
+    CloseSketchRequest,
+    CompilerInputResultRequest,
+    ESPIDFProjectPreparedResponse,
+    GeneratedBinarySchema,
+    OpenFileRequest,
+    OpenFolderRequest,
+    PreferencesModel,
+    ReloadRequest,
+    ResetPreferencesResponse,
+    SaveAsRequest,
+    SaveFileRequest,
+    SketchInfoRequest,
+    SketchInfoResponse,
+    TemplateResponse,
+)
 from fastapi import UploadFile
 
 
@@ -172,6 +183,82 @@ class ArchivoService:
                 errors=[str(e)],
             )
 
+    def prepare_espidf_project_from_source(
+        self,
+        source_code: str,
+        filename: str = "main.c",
+        project_name: str = "esp32_sketch",
+    ) -> ESPIDFProjectPreparedResponse:
+        """
+        Construye de forma sincrona un directorio temporal con estructura estricta
+        CMake de Espressif ESP-IDF a partir del codigo fuente del editor.
+        """
+        safe_project_name = (
+            re.sub(r"[^a-zA-Z0-9_]", "_", project_name.strip()) or "esp32_sketch"
+        )
+        project_id = f"{safe_project_name}_{uuid.uuid4().hex[:8]}"
+
+        try:
+            temp_root = tempfile.mkdtemp(prefix="espidf_workspace_")
+            project_dir = os.path.join(temp_root, safe_project_name)
+            main_dir = os.path.join(project_dir, "main")
+            os.makedirs(main_dir, exist_ok=True)
+
+            raw_name = os.path.basename(filename or "main.c")
+            if raw_name.endswith(".ino"):
+                raw_name = os.path.splitext(raw_name)[0] + ".cpp"
+            elif not raw_name.endswith((".c", ".cpp", ".cc")):
+                raw_name = "main.c"
+
+            src_path = os.path.join(main_dir, raw_name)
+            with open(src_path, "w", encoding="utf-8", newline="\n") as f_src:
+                f_src.write(source_code)
+
+            root_cmake_path = os.path.join(project_dir, "CMakeLists.txt")
+            root_cmake_content = (
+                "# Generado automaticamente por el Modulo de Archivo para ESP-IDF\n"
+                "cmake_minimum_required(VERSION 3.16)\n\n"
+                "include($ENV{IDF_PATH}/tools/cmake/project.cmake)\n"
+                f"project({safe_project_name})\n"
+            )
+            with open(root_cmake_path, "w", encoding="utf-8", newline="\n") as f_rc:
+                f_rc.write(root_cmake_content)
+
+            main_cmake_path = os.path.join(main_dir, "CMakeLists.txt")
+            main_cmake_content = (
+                f'idf_component_register(SRCS "{raw_name}"\n'
+                '                       INCLUDE_DIRS ".")\n'
+            )
+            with open(main_cmake_path, "w", encoding="utf-8", newline="\n") as f_mc:
+                f_mc.write(main_cmake_content)
+
+            abs_project_dir = os.path.abspath(project_dir)
+            self._active_espidf_projects[project_id] = abs_project_dir
+
+            return ESPIDFProjectPreparedResponse(
+                success=True,
+                project_id=project_id,
+                project_name=safe_project_name,
+                project_absolute_path=abs_project_dir,
+                created_files=[
+                    os.path.abspath(src_path),
+                    os.path.abspath(root_cmake_path),
+                    os.path.abspath(main_cmake_path),
+                ],
+                message="Proyecto estructurado correctamente bajo el estandar ESP-IDF.",
+                errors=[],
+            )
+        except Exception as exc:
+            return ESPIDFProjectPreparedResponse(
+                success=False,
+                project_id=project_id,
+                project_name=safe_project_name,
+                project_absolute_path="",
+                created_files=[],
+                message="Error al estructurar el directorio temporal para ESP-IDF.",
+                errors=[str(exc)],
+            )
+
     # -------------------------------------------------------------------------
     # 3. Entrega de la ruta absoluta al compilador (Modulo Sketch)
     # -------------------------------------------------------------------------
@@ -224,6 +311,8 @@ class ArchivoService:
         binaries_list: List[GeneratedBinarySchema] = []
         if os.path.isdir(search_root):
             for root, _dirs, files in os.walk(search_root):
+                if "CMakeFiles" in Path(root).parts:
+                    continue
                 for file in sorted(files):
                     if file.endswith(".bin"):
                         full_bin_path = os.path.abspath(os.path.join(root, file))
@@ -234,8 +323,8 @@ class ArchivoService:
                         )
                         size_bytes = os.path.getsize(full_bin_path)
 
-                        # Determinar offset estandar en ESP32 para ayudar al modulo de flasheo
-                        flash_offset = self._infer_esp32_flash_offset(file)
+                        # Determinar offset exacto segun familia de chip ESP32
+                        flash_offset = self._infer_esp32_flash_offset(file, req.target)
 
                         b64_data = None
                         if req.include_base64:
@@ -261,14 +350,14 @@ class ArchivoService:
                             )
                         )
 
-        overall_success = req.compilation_success and len(req.compiler_stderr) == 0
+        overall_success = req.compilation_success
         status_label = (
             "COMPILATION_SUCCESS" if overall_success else "COMPILATION_FAILED"
         )
         summary_msg = (
-            f"Compilacion exitosa. Binarios (.bin) recolectados: {len(binaries_list)}."
+            f"Compilacion ESP-IDF exitosa. Binarios (.bin) recolectados: {len(binaries_list)}."
             if overall_success
-            else f"La compilacion reporto {len(req.compiler_stderr)} error(es)."
+            else f"La compilacion ESP-IDF fallo ({len(req.compiler_stderr)} detalle(s))."
         )
 
         return BuildAndFilesDeliveryResponse(
@@ -278,14 +367,18 @@ class ArchivoService:
             project_absolute_path=project_dir,
             result_summary=summary_msg,
             compilation_logs=req.compiler_stdout,
-            errors=req.compiler_stderr,
+            errors=[] if overall_success else req.compiler_stderr,
             binaries=binaries_list,
         )
 
     @staticmethod
-    def _infer_esp32_flash_offset(filename: str) -> str:
+    def _infer_esp32_flash_offset(filename: str, target: str = "esp32") -> str:
         lower = filename.lower()
+        target_norm = (target or "esp32").lower().replace("-", "")
         if "bootloader" in lower:
+            # En ESP32-S3, C3, C6, C2 y H2 el bootloader de segunda etapa reside en 0x0
+            if target_norm in {"esp32s3", "esp32c3", "esp32c6", "esp32h2", "esp32c2"}:
+                return "0x0"
             return "0x1000"
         if "partition" in lower:
             return "0x8000"
