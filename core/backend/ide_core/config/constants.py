@@ -29,4 +29,5 @@ PREFIJO_API = "/api/v1"
 # Agregar aqui cada nuevo modulo backend que deba cargarse.
 MODULOS_REGISTRADOS = [
     "herramientas_backend.modulo",
+    "archivo_backend.modulo",
 ]

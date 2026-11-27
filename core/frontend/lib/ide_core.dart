@@ -2,6 +2,7 @@
 /// API publica de la libreria base del IDE.
 library ide_core;
 
+export 'nucleo/acciones_ayuda.dart';
 export 'nucleo/modulo_ide.dart';
 export 'nucleo/registro_modulos.dart';
 export 'ui/layout/layout_principal.dart';

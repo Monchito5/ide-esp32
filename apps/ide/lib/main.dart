@@ -3,6 +3,7 @@
 // PUNTO DE ENTRADA UNICO del IDE.
 // Arranca el shell Flutter y registra los modulos activos.
 
+import 'package:ayuda_ui/ayuda_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:ide_core/ide_core.dart';
 
@@ -25,7 +26,10 @@ class IdeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: TemaIde.claro(),
       darkTheme: TemaIde.oscuro(),
-      home: LayoutPrincipal(registro: registro),
+      home: LayoutPrincipal(
+        registro: registro,
+        accionesAyuda: crearAccionesAyuda(),
+      ),
     );
   }
 }

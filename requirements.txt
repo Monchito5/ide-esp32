@@ -19,6 +19,9 @@ python-dotenv==1.2.2
 pyserial==3.5
 platformio==6.2.0
 
+# --- Modulo Archivo ---
+python-multipart==0.0.33
+
 # --- Seguridad ---
 # passlib esta obsoleto e incompatible con bcrypt >= 4.1.
 # Se usa bcrypt directamente (ver ide_core/utils/security.py).

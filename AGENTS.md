@@ -46,7 +46,12 @@ flutter run -d chrome     # web
 - **Absolute imports only**, using the single package name:
   - `from ide_core.config.constants import X`
   - `from herramientas_backend.controllers.x import y`
-- Dependencies are **centralized in root** `requirements*.txt` — do NOT create `requirements.txt` inside `core/` or `modules/`
+
+## Git Rules (READ BEFORE COMMITTING)
+
+- **Ask before committing**: Always ask the user before running `git commit`, `git push`, `git merge`, or any git command that modifies history or remotes.
+- **Never commit without explicit user approval**: Create the changes, show them to the user, and wait for confirmation before running `git commit` or `git push`.
+- **No force push without approval**: Never use `git push --force` without explicit user confirmation.
 
 ## Module Management
 
