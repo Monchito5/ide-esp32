@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archivo-backend"
+version = "1.0.0"
+description = "Modulo Archivo (FileManager y puente ESP-IDF) para el IDE ESP32."
+requires-python = ">=3.11"
+
+dependencies = []
+
+[tool.setuptools]
+packages = ["archivo_backend"]
+package-dir = {"" = "."}
+
+[tool.pytest.ini_options]
+testpaths = ["pruebas"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

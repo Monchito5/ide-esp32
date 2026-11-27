@@ -187,6 +187,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  menu_log_ui:
+    dependency: "direct main"
+    description:
+      path: "../../modules/menu-log/frontend"
+      relative: true
+    source: path
+    version: "1.0.0"
   meta:
     dependency: transitive
     description:
@@ -231,6 +238,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../modules/simulacion/frontend"
+      relative: true
+    source: path
+    version: "1.0.0"
+  sketch_ui:
+    dependency: "direct main"
+    description:
+      path: "../../modules/sketch/frontend"
       relative: true
     source: path
     version: "1.0.0"

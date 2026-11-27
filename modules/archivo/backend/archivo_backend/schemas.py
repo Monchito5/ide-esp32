@@ -63,6 +63,10 @@ class CompilerInputResultRequest(BaseModel):
     project_id: str = Field(
         ..., description="ID del proyecto temporal o ruta absoluta del proyecto"
     )
+    target: str = Field(
+        default="esp32",
+        description="Familia SoC objetivo ESP-IDF (esp32, esp32s2, esp32s3, esp32c3, esp32c6)",
+    )
     compilation_success: bool = Field(
         default=True, description="True si idf.py build termino con codigo 0"
     )
@@ -76,10 +80,6 @@ class CompilerInputResultRequest(BaseModel):
     include_base64: bool = Field(
         default=True,
         description="Si es True, incluye el contenido Base64 de cada .bin ademas del enlace de descarga",
-    )
-    target: str = Field(
-        default="esp32",
-        description="Target ESP-IDF (ej. esp32, esp32s2, esp32s3, esp32c3, esp32c6) para calcular offsets exactos",
     )
 
 
@@ -117,17 +117,44 @@ class BuildAndFilesDeliveryResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Esquemas adicionales para las funciones locales del Menu Archivo (Abrir, Guardar, Preferencias, Submenus)
+# Esquemas para las funciones locales del Menu Archivo (Abrir, Guardar, Proyectos, Preferencias, Submenus)
 # ---------------------------------------------------------------------------
 class OpenFileRequest(BaseModel):
     filepath: str = Field(
-        ..., description="Ruta local del archivo (.ino, .cpp, .c, .h) a abrir"
+        ...,
+        description="Ruta local del archivo (.ino, .cpp, .c, .h) o carpeta de proyecto a abrir",
     )
 
 
 class SaveFileRequest(BaseModel):
     filepath: str = Field(..., description="Ruta local donde se guardara el sketch")
     content: str = Field(..., description="Codigo fuente actual del editor")
+    create_project_folder: bool = Field(
+        default=True,
+        description="Si es True y es un .ino nuevo, crea la subcarpeta <Nombre>/<Nombre>.ino",
+    )
+
+
+class CreateProjectFileRequest(BaseModel):
+    filename: str = Field(
+        ..., description="Nombre del archivo secundario (.h, .cpp, .c, .ino)"
+    )
+    project_dir: Optional[str] = Field(
+        default=None,
+        description="Directorio del proyecto (usa el proyecto activo si se omite)",
+    )
+    content: str = Field(default="", description="Contenido inicial del archivo")
+
+
+class SketchInfoRequest(BaseModel):
+    filepath: Optional[str] = Field(
+        default=None,
+        description="Ruta opcional del archivo a inspeccionar (usa el archivo activo si se omite)",
+    )
+    content: Optional[str] = Field(
+        default=None,
+        description="Contenido opcional en memoria para calcular estadisticas",
+    )
 
 
 class PreferencesModel(BaseModel):
@@ -142,6 +169,10 @@ class PreferencesModel(BaseModel):
         default=11, ge=8, le=28, description="Tamano de fuente del editor"
     )
     sketchbook_path: str = Field(..., description="Ruta de la carpeta Sketchbook")
+    libraries_path: Optional[str] = Field(
+        default=None,
+        description="Ruta de la carpeta de bibliotecas (Sketchbook/libraries)",
+    )
     auto_backup_on_save: bool = Field(
         default=False, description="Crear archivo .bak al guardar"
     )
@@ -159,7 +190,9 @@ class ArchivoActionResponse(BaseModel):
 
 
 class CloseSketchRequest(BaseModel):
-    filepath: str = Field(..., description="Ruta del archivo a cerrar")
+    filepath: Optional[str] = Field(
+        default=None, description="Ruta opcional del archivo a cerrar"
+    )
 
 
 class SaveAsRequest(BaseModel):
@@ -177,10 +210,6 @@ class OpenFolderRequest(BaseModel):
 
 class TemplateResponse(BaseModel):
     template: str = Field(..., description="Plantilla base ESP32")
-
-
-class SketchInfoRequest(BaseModel):
-    filepath: str = Field(..., description="Ruta del archivo a inspeccionar")
 
 
 class SketchInfoResponse(BaseModel):

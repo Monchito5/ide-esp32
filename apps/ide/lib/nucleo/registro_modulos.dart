@@ -8,7 +8,9 @@ import 'package:ayuda_ui/ayuda_ui.dart';
 import 'package:editor_ui/editor_ui.dart';
 import 'package:herramientas_ui/herramientas_ui.dart';
 import 'package:ide_core/ide_core.dart';
+import 'package:menu_log_ui/menu_log_ui.dart';
 import 'package:simulacion_ui/simulacion_ui.dart';
+import 'package:sketch_ui/sketch_ui.dart';
 
 /// Devuelve la lista de modulos activos del IDE.
 ///
@@ -19,7 +21,9 @@ List<ModuloIde> construirModulos() {
   return <ModuloIde>[
     ModuloArchivo(),
     ModuloEditor(),
+    ModuloSketch(),
     ModuloHerramientas(),
+    ModuloMenuLog(),
     const ModuloAyuda(),
     ModuloSimulacion(),
   ];

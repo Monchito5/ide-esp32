@@ -4,36 +4,36 @@ Actua como puente entre:
 1. Frontend (Flutter) -> Recepcion de codigo fuente con UploadFile y devolucion de logs + binarios (.bin).
 2. Compilador Sketch (ESP-IDF) -> Creacion de estructura estricta ESP-IDF en directorio temporal y entrega de ruta absoluta.
 3. Modulo de Flasheo -> Entrega de rutas/binarios (.bin) con sus offsets de memoria de ESP32.
+4. Gestion local de archivos y proyectos reutilizando ConfigManager y FileManager.
 """
 
 import base64
+import datetime
 import os
 import re
 import shutil
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from archivo_backend.config import (
     DEFAULT_SKETCH_TEMPLATE,
     ConfigManager,
     ExamplesCatalog,
+    FileManager,
 )
 from archivo_backend.schemas import (
     ArchivoActionResponse,
     BuildAndFilesDeliveryResponse,
     ClearRecentsResponse,
-    CloseSketchRequest,
     CompilerInputResultRequest,
+    CreateProjectFileRequest,
     ESPIDFProjectPreparedResponse,
     GeneratedBinarySchema,
     OpenFileRequest,
-    OpenFolderRequest,
     PreferencesModel,
-    ReloadRequest,
     ResetPreferencesResponse,
-    SaveAsRequest,
     SaveFileRequest,
     SketchInfoRequest,
     SketchInfoResponse,
@@ -45,11 +45,14 @@ from fastapi import UploadFile
 class ArchivoService:
     """
     Gestiona tanto la preparacion de proyectos temporales en formato estricto ESP-IDF
-    como el empaquetado de resultados (.bin + logs) de regreso a Flutter.
+    como las operaciones locales del Menu Archivo reutilizando FileManager.
     """
 
     def __init__(self, base_dir: str | None = None):
         self.config_manager = ConfigManager(base_dir=base_dir)
+        self.file_manager = FileManager(self.config_manager)
+        self.current_file: Optional[str] = None
+        self.current_encoding: str = "utf-8"
         # Registro en memoria de directorios temporales activos: {project_id: absolute_path}
         self._active_espidf_projects: Dict[str, str] = {}
 
@@ -418,46 +421,37 @@ class ArchivoService:
     # Operaciones adicionales del Menu Archivo (Nuevo, Abrir, Guardar, Submenus, Preferencias)
     # -------------------------------------------------------------------------
     def new_sketch(self) -> ArchivoActionResponse:
+        self.current_file = None
+        self.current_encoding = "utf-8"
+        info = self.file_manager.get_project_info(None)
         return ArchivoActionResponse(
             success=True,
             action="new_sketch",
-            result="Nuevo sketch inicializado.",
+            result="Nuevo sketch inicializado con plantilla base ESP32.",
             errors=[],
             files=[],
-            content="",
+            content=DEFAULT_SKETCH_TEMPLATE,
+            encoding="utf-8",
+            metadata=info,
         )
 
     def open_sketch(self, req: OpenFileRequest) -> ArchivoActionResponse:
-        filepath = req.filepath
-        if not filepath.endswith((".ino", ".cpp", ".c", ".h")):
-            return ArchivoActionResponse(
-                success=False,
-                action="open_file",
-                result="Extension de archivo no soportada.",
-                errors=[
-                    f"El archivo '{filepath}' no tiene una extension valida (.ino, .cpp, .c, .h)."
-                ],
-                files=[filepath],
-            )
         try:
-            used_encoding = "utf-8"
-            try:
-                with open(filepath, "r", encoding="utf-8") as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                used_encoding = "latin-1"
-                with open(filepath, "r", encoding="latin-1") as f:
-                    content = f.read()
-
-            self.config_manager.add_recent_file(filepath)
+            resolved_path, content, used_encoding = self.file_manager.read_file(
+                req.filepath
+            )
+            self.current_file = resolved_path
+            self.current_encoding = used_encoding
+            info = self.file_manager.get_project_info(resolved_path)
             return ArchivoActionResponse(
                 success=True,
                 action="open_file",
-                result=f"Archivo '{os.path.basename(filepath)}' cargado correctamente.",
+                result=f"Archivo '{os.path.basename(resolved_path)}' cargado correctamente.",
                 errors=[],
-                files=[filepath],
+                files=[resolved_path],
                 content=content,
                 encoding=used_encoding,
+                metadata=info,
             )
         except Exception as e:
             return ArchivoActionResponse(
@@ -465,34 +459,29 @@ class ArchivoService:
                 action="open_file",
                 result="No se pudo abrir el archivo solicitado.",
                 errors=[str(e)],
-                files=[filepath],
+                files=[req.filepath] if req.filepath else [],
+                metadata=self.file_manager.get_project_info(self.current_file),
             )
 
     def save_sketch(self, req: SaveFileRequest) -> ArchivoActionResponse:
-        target = req.filepath
-        if not os.path.splitext(target)[1]:
-            target += ".ino"
-        generated_files = [target]
         try:
-            os.makedirs(os.path.dirname(os.path.abspath(target)), exist_ok=True)
-            if self.config_manager.settings.get(
-                "auto_backup_on_save"
-            ) and os.path.exists(target):
-                bak_path = target + ".bak"
-                shutil.copy2(target, bak_path)
-                generated_files.append(bak_path)
-
-            with open(target, "w", encoding="utf-8", newline="") as f:
-                f.write(req.content)
-
-            self.config_manager.add_recent_file(target)
+            resolved_path, generated_files = self.file_manager.write_file(
+                target_path=req.filepath,
+                content=req.content,
+                create_project_folder=req.create_project_folder,
+            )
+            self.current_file = resolved_path
+            self.current_encoding = "utf-8"
+            info = self.file_manager.get_project_info(resolved_path)
             return ArchivoActionResponse(
                 success=True,
                 action="save_file",
-                result=f"Archivo guardado exitosamente en '{target}'.",
+                result=f"Archivo guardado exitosamente en '{resolved_path}'.",
                 errors=[],
                 files=generated_files,
                 content=req.content,
+                encoding="utf-8",
+                metadata=info,
             )
         except Exception as e:
             return ArchivoActionResponse(
@@ -501,14 +490,120 @@ class ArchivoService:
                 result="Error al guardar el archivo en disco.",
                 errors=[str(e)],
                 files=[],
+                metadata=self.file_manager.get_project_info(self.current_file),
+            )
+
+    def close_sketch(self, filepath: Optional[str] = None) -> ArchivoActionResponse:
+        closed_file = filepath or self.current_file
+        self.current_file = None
+        self.current_encoding = "utf-8"
+        info = self.file_manager.get_project_info(None)
+        return ArchivoActionResponse(
+            success=True,
+            action="close_sketch",
+            result="Sketch cerrado correctamente.",
+            errors=[],
+            files=[closed_file] if closed_file else [],
+            content="",
+            encoding="utf-8",
+            metadata=info,
+        )
+
+    def get_current_project(self) -> ArchivoActionResponse:
+        info = self.file_manager.get_project_info(self.current_file)
+        return ArchivoActionResponse(
+            success=True,
+            action="get_current_project",
+            result="Informacion del proyecto activo obtenida.",
+            errors=[],
+            files=info.get("project_files", []),
+            encoding=self.current_encoding,
+            metadata=info,
+        )
+
+    def get_project_files(
+        self, project_path: Optional[str] = None
+    ) -> ArchivoActionResponse:
+        target = project_path or self.current_file
+        if not target:
+            info = self.file_manager.get_project_info(None)
+            return ArchivoActionResponse(
+                success=False,
+                action="get_project_files",
+                result="No hay un proyecto activo ni se especifico una ruta de proyecto.",
+                errors=["No se proporciono project_path y no hay archivo activo."],
+                files=[],
+                metadata=info,
+            )
+
+        abs_target = os.path.abspath(target)
+        if not os.path.exists(abs_target):
+            return ArchivoActionResponse(
+                success=False,
+                action="get_project_files",
+                result="La ruta del proyecto especificada no existe.",
+                errors=[f"No existe la ruta: {abs_target}"],
+                files=[],
+                metadata=self.file_manager.get_project_info(None),
+            )
+
+        info = self.file_manager.get_project_info(abs_target)
+        return ArchivoActionResponse(
+            success=True,
+            action="get_project_files",
+            result="Archivos del proyecto obtenidos correctamente.",
+            errors=[],
+            files=info.get("project_files", []),
+            metadata=info,
+        )
+
+    def create_project_file(
+        self, req: CreateProjectFileRequest
+    ) -> ArchivoActionResponse:
+        project_dir = req.project_dir
+        if not project_dir and self.current_file:
+            project_dir = os.path.dirname(self.current_file)
+
+        if not project_dir:
+            return ArchivoActionResponse(
+                success=False,
+                action="create_project_file",
+                result="No hay proyecto activo para crear el archivo secundario.",
+                errors=["Especifica project_dir o guarda/abre un proyecto primero."],
+                files=[],
+                metadata=self.file_manager.get_project_info(None),
+            )
+
+        try:
+            created_path = self.file_manager.create_project_file(
+                project_dir=project_dir,
+                filename=req.filename,
+                content=req.content,
+            )
+            info = self.file_manager.get_project_info(self.current_file or created_path)
+            return ArchivoActionResponse(
+                success=True,
+                action="create_project_file",
+                result=f"Archivo '{req.filename}' creado en el proyecto.",
+                errors=[],
+                files=[created_path],
+                content=req.content,
+                encoding="utf-8",
+                metadata=info,
+            )
+        except Exception as e:
+            return ArchivoActionResponse(
+                success=False,
+                action="create_project_file",
+                result="No se pudo crear el archivo secundario en el proyecto.",
+                errors=[str(e)],
+                files=[],
+                metadata=self.file_manager.get_project_info(self.current_file),
             )
 
     def get_submenus_data(self) -> ArchivoActionResponse:
         recent = self.config_manager.settings.get("recent_files", [])
-        sketchbook = [
-            {"name": name, "path": path}
-            for name, path in self.config_manager.list_sketchbook_projects()
-        ]
+        sketchbook = self.config_manager.list_sketchbook_projects_detailed()
         return ArchivoActionResponse(
             success=True,
             action="get_submenus",
@@ -519,21 +614,38 @@ class ArchivoService:
                 "recent_files": recent,
                 "sketchbook_projects": sketchbook,
                 "examples_categories": ExamplesCatalog.CATEGORIES,
+                "sketchbook_path": self.config_manager.settings.get("sketchbook_path"),
+                "libraries_path": self.config_manager.get_libraries_path(),
             },
         )
 
     def get_preferences(self) -> ArchivoActionResponse:
+        self.config_manager.get_libraries_path()
         return ArchivoActionResponse(
             success=True,
             action="get_preferences",
             result="Preferencias actuales cargadas.",
             errors=[],
             files=[self.config_manager.config_path],
-            metadata=self.config_manager.settings,
+            metadata=dict(self.config_manager.settings),
         )
 
     def update_preferences(self, prefs: PreferencesModel) -> ArchivoActionResponse:
-        self.config_manager.settings.update(prefs.model_dump())
+        data = prefs.model_dump() if hasattr(prefs, "model_dump") else prefs.dict()
+        sketchbook_dir = (
+            (data.get("sketchbook_path") or "").strip()
+            or self.config_manager.settings.get("sketchbook_path")
+            or self.config_manager.default_sketchbook
+        )
+        data["sketchbook_path"] = sketchbook_dir
+
+        lib_path = data.get("libraries_path")
+        if not lib_path or not str(lib_path).strip():
+            data["libraries_path"] = os.path.join(sketchbook_dir, "libraries")
+        else:
+            data["libraries_path"] = str(lib_path).strip()
+
+        self.config_manager.settings.update(data)
         self.config_manager.save_config()
         self.config_manager.ensure_sketchbook_exists()
         return ArchivoActionResponse(
@@ -542,27 +654,50 @@ class ArchivoService:
             result="Preferencias actualizadas y guardadas en disco.",
             errors=[],
             files=[self.config_manager.config_path],
-            metadata=self.config_manager.settings,
+            metadata=dict(self.config_manager.settings),
         )
 
-    def create_backup(self, filepath: str) -> ArchivoActionResponse:
-        if not os.path.exists(filepath):
+    def reset_preferences(self) -> ArchivoActionResponse:
+        defaults = self.config_manager.reset_defaults()
+        return ArchivoActionResponse(
+            success=True,
+            action="reset_preferences",
+            result="Preferencias restablecidas a valores por defecto.",
+            errors=[],
+            files=[self.config_manager.config_path],
+            metadata=dict(defaults),
+        )
+
+    def clear_recent_files(self) -> ArchivoActionResponse:
+        self.config_manager.clear_recent_files()
+        return ArchivoActionResponse(
+            success=True,
+            action="clear_recent_files",
+            result="Historial de archivos recientes limpiado.",
+            errors=[],
+            files=[],
+            metadata={"recent_files": []},
+        )
+
+    def create_backup(self, filepath: Optional[str] = None) -> ArchivoActionResponse:
+        target = filepath or self.current_file
+        if not target:
             return ArchivoActionResponse(
                 success=False,
                 action="advanced_backup",
-                result="El archivo original no existe en disco.",
-                errors=[f"No se encontro: {filepath}"],
+                result="No se especifico archivo para crear respaldo (.bak).",
+                errors=["Ruta de archivo vacia."],
                 files=[],
             )
-        bak_path = filepath + ".bak"
         try:
-            shutil.copy2(filepath, bak_path)
+            bak_path = self.file_manager.create_backup(target)
             return ArchivoActionResponse(
                 success=True,
                 action="advanced_backup",
                 result=f"Respaldo creado en '{bak_path}'.",
                 errors=[],
-                files=[filepath, bak_path],
+                files=[os.path.abspath(target), bak_path],
+                metadata=self.file_manager.get_project_info(target),
             )
         except Exception as e:
             return ArchivoActionResponse(
@@ -573,94 +708,48 @@ class ArchivoService:
                 files=[],
             )
 
-    def close_sketch(self, filepath: str) -> ArchivoActionResponse:
-        """Cierra el sketch actual (libera el archivo en memoria)."""
-        if not filepath:
-            return ArchivoActionResponse(
-                success=False,
-                action="close_sketch",
-                result="No hay archivo abierto para cerrar.",
-                errors=["Ruta de archivo vacía."],
-                files=[],
-            )
+    def get_sketch_info(
+        self, req: Optional[SketchInfoRequest] = None
+    ) -> ArchivoActionResponse:
+        target_path = (
+            req.filepath if req and req.filepath else None
+        ) or self.current_file
+        content = req.content if req else None
+        stats = self.file_manager.get_sketch_stats(
+            content=content,
+            filepath=target_path,
+            encoding=self.current_encoding,
+        )
         return ArchivoActionResponse(
             success=True,
-            action="close_sketch",
-            result=f"Sketch '{os.path.basename(filepath)}' cerrado.",
+            action="sketch_info",
+            result="Informacion y estadisticas del sketch obtenidas.",
             errors=[],
-            files=[filepath],
+            files=[os.path.abspath(target_path)] if target_path else [],
+            encoding=stats["encoding"],
+            metadata=stats,
         )
 
+    # -------------------------------------------------------------------------
+    # Metodos de compatibilidad con endpoints previos del monorepo
+    # -------------------------------------------------------------------------
     def save_as_sketch(self, filepath: str, content: str) -> ArchivoActionResponse:
-        """Guarda el sketch en una nueva ruta (Guardar como)."""
-        if not os.path.splitext(filepath)[1]:
-            filepath += ".ino"
-        try:
-            os.makedirs(os.path.dirname(os.path.abspath(filepath)), exist_ok=True)
-            with open(filepath, "w", encoding="utf-8", newline="") as f:
-                f.write(content)
-            self.config_manager.add_recent_file(filepath)
-            return ArchivoActionResponse(
-                success=True,
-                action="save_as",
-                result=f"Sketch guardado como '{filepath}'.",
-                errors=[],
-                files=[filepath],
+        return self.save_sketch(
+            SaveFileRequest(
+                filepath=filepath,
                 content=content,
+                create_project_folder=True,
             )
-        except Exception as e:
-            return ArchivoActionResponse(
-                success=False,
-                action="save_as",
-                result="Error al guardar el sketch como nuevo archivo.",
-                errors=[str(e)],
-                files=[filepath],
-            )
+        )
 
     def reload_sketch(self, filepath: str) -> ArchivoActionResponse:
-        """Recarga el archivo desde el disco (descarta cambios sin guardar)."""
-        if not os.path.exists(filepath):
-            return ArchivoActionResponse(
-                success=False,
-                action="reload_sketch",
-                result=f"El archivo '{filepath}' no existe en disco.",
-                errors=[f"No se encontró: {filepath}"],
-                files=[filepath],
-            )
-        try:
-            used_encoding = "utf-8"
-            try:
-                with open(filepath, "r", encoding="utf-8") as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                used_encoding = "latin-1"
-                with open(filepath, "r", encoding="latin-1") as f:
-                    content = f.read()
-            return ArchivoActionResponse(
-                success=True,
-                action="reload_sketch",
-                result=f"Archivo '{os.path.basename(filepath)}' recargado desde disco.",
-                errors=[],
-                files=[filepath],
-                content=content,
-                encoding=used_encoding,
-            )
-        except Exception as e:
-            return ArchivoActionResponse(
-                success=False,
-                action="reload_sketch",
-                result="No se pudo recargar el archivo desde disco.",
-                errors=[str(e)],
-                files=[filepath],
-            )
+        return self.open_sketch(OpenFileRequest(filepath=filepath))
 
     def get_sketch_template(self) -> TemplateResponse:
-        """Devuelve la plantilla base ESP32."""
         return TemplateResponse(template=DEFAULT_SKETCH_TEMPLATE)
 
-    def get_sketch_info(self, filepath: str) -> SketchInfoResponse:
-        """Devuelve información y estadísticas del sketch."""
-        if not os.path.exists(filepath):
+    def get_sketch_info_legacy(self, filepath: str) -> SketchInfoResponse:
+        if not filepath or not os.path.exists(filepath):
             return SketchInfoResponse(
                 filepath=filepath,
                 lineas=0,
@@ -669,23 +758,18 @@ class ArchivoService:
                 ultima_modificacion="",
             )
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                content = f.read()
-            lineas = content.count("\n") + 1 if content else 0
-            caracteres = len(content)
-            tamaño_bytes = len(content.encode("utf-8"))
-            import datetime
-
+            stats = self.file_manager.get_sketch_stats(filepath=filepath)
             mtime = os.path.getmtime(filepath)
             ultima_mod = datetime.datetime.fromtimestamp(mtime).isoformat()
             return SketchInfoResponse(
                 filepath=filepath,
-                lineas=lineas,
-                caracteres=caracteres,
-                tamaño_bytes=tamaño_bytes,
+                lineas=stats["lines"],
+                caracteres=stats["chars"],
+                tamaño_bytes=stats["size_bytes"],
                 ultima_modificacion=ultima_mod,
+                encoding=stats["encoding"],
             )
-        except Exception as e:
+        except Exception:
             return SketchInfoResponse(
                 filepath=filepath,
                 lineas=0,
@@ -694,17 +778,15 @@ class ArchivoService:
                 ultima_modificacion="",
             )
 
-    def reset_preferences(self) -> ResetPreferencesResponse:
-        """Restablece las preferencias a valores por defecto."""
+    def reset_preferences_legacy(self) -> ResetPreferencesResponse:
         self.config_manager.reset_defaults()
         return ResetPreferencesResponse(
             success=True,
-            configuracion=self.config_manager.settings,
+            configuracion=dict(self.config_manager.settings),
             mensaje="Preferencias restablecidas a valores por defecto.",
         )
 
     def clear_recents(self) -> ClearRecentsResponse:
-        """Limpia el historial de archivos recientes."""
         self.config_manager.clear_recent_files()
         return ClearRecentsResponse(
             success=True,

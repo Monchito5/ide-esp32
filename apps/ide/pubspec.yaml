@@ -23,6 +23,10 @@ dependencies:
     path: ../../modules/editor/frontend
   simulacion_ui:
     path: ../../modules/simulacion/frontend
+  sketch_ui:
+    path: ../../modules/sketch/frontend
+  menu_log_ui:
+    path: ../../modules/menu-log/frontend
 
 dev_dependencies:
   flutter_test:
