@@ -33,5 +33,5 @@ MODULOS_REGISTRADOS = [
     "simulacion_backend.modulo",
     "sketch_backend.modulo",
     "editor_backend.modulo",
-    "azul_backend.modulo",
+    "menu_log_backend.modulo",
 ]

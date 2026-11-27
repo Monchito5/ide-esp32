@@ -1,5 +1,5 @@
-# Archivo: modules/azul/backend/conftest.py
-"""Configuración de pytest para el módulo Azul."""
+# Archivo: modules/menu-log/backend/conftest.py
+"""Configuracion de pytest para el modulo Menu-Log."""
 
 import sys
 from pathlib import Path

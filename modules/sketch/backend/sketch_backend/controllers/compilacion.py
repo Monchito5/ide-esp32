@@ -13,10 +13,10 @@ _bloqueo = Lock()
 _tareas: dict[str, dict] = {}
 
 
-def _publicar_log_azul(mensaje: str, nivel: str = "INFO") -> None:
-    """Publica eventos de compilacion en el modulo Azul si esta cargado."""
+def _publicar_log_menu_log(mensaje: str, nivel: str = "INFO") -> None:
+    """Publica eventos de compilacion en el modulo Menu-Log si esta cargado."""
     try:
-        from azul_backend.modulo import publish
+        from menu_log_backend.modulo import publish
 
         publish(mensaje, nivel, source="sketch-espidf")
     except ImportError:
@@ -36,7 +36,7 @@ def _ejecutar_compilacion(task_id: str, solicitud: dict) -> None:
         _tareas[task_id]["status"] = "running"
 
     try:
-        _publicar_log_azul(
+        _publicar_log_menu_log(
             f"Compilando proyecto ESP-IDF en {solicitud['project_path']}...", "INFO"
         )
         resultado = compilar_proyecto(
@@ -52,7 +52,7 @@ def _ejecutar_compilacion(task_id: str, solicitud: dict) -> None:
             )
             _tareas[task_id]["error"] = resultado.get("error")
 
-        _publicar_log_azul(
+        _publicar_log_menu_log(
             (
                 "Compilacion ESP-IDF finalizada con exito."
                 if resultado.get("success")
@@ -65,7 +65,7 @@ def _ejecutar_compilacion(task_id: str, solicitud: dict) -> None:
         with _bloqueo:
             _tareas[task_id]["status"] = "failed"
             _tareas[task_id]["error"] = str(exc)
-        _publicar_log_azul(f"Excepcion en compilacion ESP-IDF: {exc}", "ERROR")
+        _publicar_log_menu_log(f"Excepcion en compilacion ESP-IDF: {exc}", "ERROR")
 
 
 def iniciar_compilacion(solicitud: dict) -> dict:
@@ -128,7 +128,7 @@ def compilar_codigo_fuente(solicitud: dict) -> dict:
             "command": [],
         }
 
-    _publicar_log_azul(
+    _publicar_log_menu_log(
         f"Iniciando compilacion nativa ESP-IDF (target={target}) para '{preparacion.project_name}'",
         "INFO",
     )
@@ -159,7 +159,7 @@ def compilar_codigo_fuente(solicitud: dict) -> dict:
         )
     )
 
-    _publicar_log_azul(
+    _publicar_log_menu_log(
         entrega.result_summary,
         "SUCCESS" if entrega.success else "ERROR",
     )
@@ -180,11 +180,11 @@ def compilar_codigo_fuente(solicitud: dict) -> dict:
     }
 
 
-def adaptador_compilacion_azul(
+def adaptador_compilacion_menu_log(
     ruta_proyecto: str,
     publicar: Callable[[str, str], None],
 ) -> dict:
-    """Adaptador compatible con azul_backend.modulo.registrar(app, compile_adapter=...)."""
+    """Adaptador compatible con menu_log_backend.modulo.registrar(app, compile_adapter=...)."""
     publicar(f"Ejecutando idf.py build sobre {ruta_proyecto}", "INFO")
     res = compilar_proyecto(ruta_proyecto)
     errores = [res["error"]] if res.get("error") else []

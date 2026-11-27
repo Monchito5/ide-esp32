@@ -12,9 +12,11 @@ from ide_core.utils.logger import log_sistema
 def _obtener_adaptador_sketch():
     """Intenta obtener el adaptador de compilacion ESP-IDF del modulo Sketch."""
     try:
-        from sketch_backend.controllers.compilacion import adaptador_compilacion_azul
+        from sketch_backend.controllers.compilacion import (
+            adaptador_compilacion_menu_log,
+        )
 
-        return adaptador_compilacion_azul
+        return adaptador_compilacion_menu_log
     except ImportError:
         return None
 
@@ -35,7 +37,7 @@ def registrar_modulos(app: FastAPI) -> None:
             log_sistema.warning("Modulo sin funcion registrar(): %s", ruta)
             continue
 
-        if ruta == "azul_backend.modulo" and adaptador_sketch is not None:
+        if ruta == "menu_log_backend.modulo" and adaptador_sketch is not None:
             registrar(app, compile_adapter=adaptador_sketch)
         else:
             registrar(app)

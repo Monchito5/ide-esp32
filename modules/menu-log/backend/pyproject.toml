@@ -3,15 +3,15 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "azul-backend"
+name = "menu-log-backend"
 version = "1.0.0"
-description = "Modulo Azul (Menu Lateral y Panel Log) para el IDE ESP32."
+description = "Modulo Menu-Log (Menu Lateral y Panel Log) para el IDE ESP32."
 requires-python = ">=3.11"
 
 dependencies = []
 
 [tool.setuptools]
-packages = ["azul_backend"]
+packages = ["menu_log_backend"]
 package-dir = {"" = "."}
 
 [tool.pytest.ini_options]

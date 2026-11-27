@@ -1,5 +1,5 @@
-name: azul_ui
-description: Modulo Azul (Menu lateral y panel Log) para el IDE ESP32.
+name: menu_log_ui
+description: Modulo Menu-Log (Menu lateral y panel Log) para el IDE ESP32.
 version: 1.0.0
 publish_to: 'none'
 
