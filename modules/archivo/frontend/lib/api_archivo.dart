@@ -71,12 +71,57 @@ class ApiArchivo {
   Future<ResultadoApi<Map<String, dynamic>>> guardarArchivo({
     required String filepath,
     required String content,
+    bool createProjectFolder = true,
   }) async {
     return _ejecutar<Map<String, dynamic>>(
       http.post(
         Uri.parse('$baseUrl/guardar'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'filepath': filepath, 'content': content}),
+        body: jsonEncode({
+          'filepath': filepath,
+          'content': content,
+          'create_project_folder': createProjectFolder,
+        }),
+      ),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> obtenerProyectoActual() async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(Uri.parse('$baseUrl/actual')),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> obtenerArchivosProyecto({
+    String? projectPath,
+  }) async {
+    final uri = Uri.parse('$baseUrl/proyecto/archivos').replace(
+      queryParameters: (projectPath != null && projectPath.isNotEmpty)
+          ? {'project_path': projectPath}
+          : null,
+    );
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(uri),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> crearArchivoEnProyecto({
+    required String filename,
+    String? projectDir,
+    String content = '',
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/proyecto/archivo'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'filename': filename,
+          if (projectDir != null) 'project_dir': projectDir,
+          'content': content,
+        }),
       ),
       (d) => d as Map<String, dynamic>,
     );
