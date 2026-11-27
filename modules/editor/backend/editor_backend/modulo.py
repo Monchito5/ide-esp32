@@ -6,9 +6,8 @@ El core lo importa como:
     from editor_backend.modulo import registrar
 """
 
-from fastapi import FastAPI
-
 from editor_backend.routes import router
+from fastapi import FastAPI
 
 NOMBRE_MODULO = "editor"
 VERSION_MODULO = "1.0.0"

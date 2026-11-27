@@ -3,9 +3,6 @@
 
 from typing import Optional
 
-from fastapi import APIRouter
-from pydantic import BaseModel, Field
-
 from editor_backend.controllers.config_controller import (
     actualizar_configuracion,
     obtener_configuracion,
@@ -15,6 +12,9 @@ from editor_backend.controllers.search_controller import (
     buscar_en_archivos,
     reemplazar_en_archivos,
 )
+from fastapi import APIRouter
+from pydantic import BaseModel, Field
+
 from ide_core.config.constants import PREFIJO_API
 
 router = APIRouter(prefix=f"{PREFIJO_API}/editor", tags=["editor"])

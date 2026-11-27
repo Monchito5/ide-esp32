@@ -20,14 +20,22 @@ def buscar_en_archivos(
 
     ruta_base = Path(directorio) if directorio else Path.cwd()
     if not ruta_base.exists() or not ruta_base.is_dir():
-        return {"total_coincidencias": 0, "archivos": [], "error": "Directorio no valido"}
+        return {
+            "total_coincidencias": 0,
+            "archivos": [],
+            "error": "Directorio no valido",
+        }
 
     coincidencias_por_archivo = []
     total = 0
 
     for raiz, dirs, archivos in os.walk(ruta_base):
         # Excluir carpetas irrelevantes como git, build, cache
-        dirs[:] = [d for d in dirs if not d.startswith(".") and d not in {"build", "venv", "node_modules"}]
+        dirs[:] = [
+            d
+            for d in dirs
+            if not d.startswith(".") and d not in {"build", "venv", "node_modules"}
+        ]
 
         for nombre_archivo in archivos:
             ext = os.path.splitext(nombre_archivo)[1].lower()
@@ -48,20 +56,24 @@ def buscar_en_archivos(
 
                 if cadena_buscada in cadena_evaluar:
                     columna = cadena_evaluar.find(cadena_buscada)
-                    coincidencias_archivo.append({
-                        "linea": num_linea,
-                        "columna": columna + 1,
-                        "texto": contenido.strip(),
-                    })
+                    coincidencias_archivo.append(
+                        {
+                            "linea": num_linea,
+                            "columna": columna + 1,
+                            "texto": contenido.strip(),
+                        }
+                    )
                     total += 1
 
             if coincidencias_archivo:
-                coincidencias_por_archivo.append({
-                    "archivo": str(ruta_completa.relative_to(ruta_base)),
-                    "ruta_absoluta": str(ruta_completa),
-                    "total": len(coincidencias_archivo),
-                    "coincidencias": coincidencias_archivo,
-                })
+                coincidencias_por_archivo.append(
+                    {
+                        "archivo": str(ruta_completa.relative_to(ruta_base)),
+                        "ruta_absoluta": str(ruta_completa),
+                        "total": len(coincidencias_archivo),
+                        "coincidencias": coincidencias_archivo,
+                    }
+                )
 
     return {
         "total_coincidencias": total,
@@ -98,6 +110,7 @@ def reemplazar_en_archivos(
                 nuevo_contenido = contenido.replace(termino, reemplazo)
             else:
                 import re
+
                 regex = re.compile(re.escape(termino), re.IGNORECASE)
                 ocurrencias = len(regex.findall(contenido))
                 nuevo_contenido = regex.sub(reemplazo, contenido)

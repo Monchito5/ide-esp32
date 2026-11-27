@@ -35,7 +35,9 @@ def test_controlador_configuracion():
     cfg = obtener_configuracion()
     assert "tamanio_fuente" in cfg
 
-    actualizado = actualizar_configuracion({"tamanio_fuente": 18, "tema_editor": "dracula"})
+    actualizado = actualizar_configuracion(
+        {"tamanio_fuente": 18, "tema_editor": "dracula"}
+    )
     assert actualizado["exitoso"] is True
     assert actualizado["configuracion"]["tamanio_fuente"] == 18
     assert actualizado["configuracion"]["tema_editor"] == "dracula"

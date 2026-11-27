@@ -17,15 +17,23 @@ def actualizar_configuracion(nuevos_valores: dict) -> dict:
 
     if "tamanio_fuente" in nuevos_valores:
         # Respetar límites seguros de zoom (8px a 36px)
-        _configuracion_actual.tamanio_fuente = max(8, min(36, int(nuevos_valores["tamanio_fuente"])))
+        _configuracion_actual.tamanio_fuente = max(
+            8, min(36, int(nuevos_valores["tamanio_fuente"]))
+        )
     if "tamanio_tabulacion" in nuevos_valores:
-        _configuracion_actual.tamanio_tabulacion = max(1, min(8, int(nuevos_valores["tamanio_tabulacion"])))
+        _configuracion_actual.tamanio_tabulacion = max(
+            1, min(8, int(nuevos_valores["tamanio_tabulacion"]))
+        )
     if "usar_espacios" in nuevos_valores:
         _configuracion_actual.usar_espacios = bool(nuevos_valores["usar_espacios"])
     if "resaltado_sintaxis" in nuevos_valores:
-        _configuracion_actual.resaltado_sintaxis = bool(nuevos_valores["resaltado_sintaxis"])
+        _configuracion_actual.resaltado_sintaxis = bool(
+            nuevos_valores["resaltado_sintaxis"]
+        )
     if "auto_formato_guardar" in nuevos_valores:
-        _configuracion_actual.auto_formato_guardar = bool(nuevos_valores["auto_formato_guardar"])
+        _configuracion_actual.auto_formato_guardar = bool(
+            nuevos_valores["auto_formato_guardar"]
+        )
     if "tema_editor" in nuevos_valores:
         _configuracion_actual.tema_editor = str(nuevos_valores["tema_editor"])
 
