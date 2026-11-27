@@ -87,3 +87,10 @@ class AppConfig:
 
 app = AppConfig()
 app_instancia = AppConfig.crear_app()
+@app_instancia.on_event("startup")
+async def inicializar_base_datos() -> None:
+    """Inicializa la base de datos al arrancar el servidor."""
+    if not AppConfig.establecer_conexion():
+        raise RuntimeError(
+            "No se pudo inicializar la base de datos del IDE."
+        )

@@ -15,7 +15,8 @@ dependencies:
     path: ../../core/frontend
   herramientas_ui:
     path: ../../modules/herramientas/frontend
-
+  sketch_ui:
+    path: ../../modules/sketch/frontend
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -3,6 +3,8 @@
 from fastapi import APIRouter, HTTPException, status
 
 from ide_core.config.constants import PREFIJO_API
+from sketch_backend.controllers.archivos import listar_archivos
+from sketch_backend.controllers.exportacion import exportar_binario
 from sketch_backend.controllers.compilacion import (
     iniciar_compilacion,
     obtener_resumen,
@@ -35,6 +37,24 @@ def consultar_tarea(task_id: str) -> dict:
         )
 
     return tarea
+
+
+@router.get("/tareas/{task_id}/binarios/{nombre_archivo}")
+def descargar_binario(task_id: str, nombre_archivo: str):
+    """Descarga un binario generado por una tarea de compilacion."""
+    return exportar_binario(task_id, nombre_archivo)
+
+
+@router.get("/archivos")
+def consultar_archivos(project_path: str) -> dict:
+    """Lista los archivos y directorios de un proyecto ESP-IDF."""
+    try:
+        return listar_archivos(project_path)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
 
 
 @router.get("/estado")

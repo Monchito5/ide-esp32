@@ -5,6 +5,7 @@
 
 import 'package:herramientas_ui/herramientas_ui.dart';
 import 'package:ide_core/ide_core.dart';
+import 'package:sketch_ui/sketch_ui.dart';
 
 /// Devuelve la lista de modulos activos del IDE.
 ///
@@ -14,6 +15,6 @@ import 'package:ide_core/ide_core.dart';
 List<ModuloIde> construirModulos() {
   return <ModuloIde>[
     ModuloHerramientas(),
-    // ModuloOtroEquipo(),
+    ModuloSketch(),
   ];
 }
