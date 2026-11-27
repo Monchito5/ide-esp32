@@ -78,12 +78,15 @@ def test_sondear_chip_esptool_parsea_chip_y_mac():
         stdout=salida_simulada,
         stderr="",
     )
-    with patch(
-        "herramientas_backend.controllers.placa._resolver_comando_esptool",
-        return_value=["esptool"],
-    ), patch(
-        "herramientas_backend.controllers.placa.subprocess.run",
-        return_value=proc_ok,
+    with (
+        patch(
+            "herramientas_backend.controllers.placa._resolver_comando_esptool",
+            return_value=["esptool"],
+        ),
+        patch(
+            "herramientas_backend.controllers.placa.subprocess.run",
+            return_value=proc_ok,
+        ),
     ):
         resultado = sondear_chip_esptool("COM5")
 
@@ -121,12 +124,15 @@ def test_detectar_placas_conectadas_endpoint_http():
 
 
 def test_estado_esp_idf_sin_instalacion_no_falla():
-    with patch(
-        "herramientas_backend.controllers.esp_idf.localizar_instalacion_idf",
-        return_value=None,
-    ), patch(
-        "herramientas_backend.controllers.esp_idf.shutil.which",
-        return_value=None,
+    with (
+        patch(
+            "herramientas_backend.controllers.esp_idf.localizar_instalacion_idf",
+            return_value=None,
+        ),
+        patch(
+            "herramientas_backend.controllers.esp_idf.shutil.which",
+            return_value=None,
+        ),
     ):
         estado = estado_esp_idf()
 

@@ -70,7 +70,9 @@ def _localizar_python_venv_espressif(idf_dir: Optional[Path]) -> Optional[Path]:
         return None
     carpeta_python = idf_dir.parent / "tools" / "python"
     if carpeta_python.is_dir():
-        for exe in sorted(carpeta_python.glob("*/venv/Scripts/python.exe"), reverse=True):
+        for exe in sorted(
+            carpeta_python.glob("*/venv/Scripts/python.exe"), reverse=True
+        ):
             if exe.is_file():
                 return exe
         for exe in sorted(carpeta_python.glob("*/venv/bin/python"), reverse=True):
@@ -117,7 +119,9 @@ def _ejecutar_idf(comando: list[str], timeout: int = 60) -> dict:
         try:
             from sketch_backend.esp_idf_backend import preparar_entorno_idf
 
-            python_prep, idf_script_prep, entorno_prep, err_prep = preparar_entorno_idf()
+            python_prep, idf_script_prep, entorno_prep, err_prep = (
+                preparar_entorno_idf()
+            )
             if err_prep:
                 python_prep = None
         except ImportError:

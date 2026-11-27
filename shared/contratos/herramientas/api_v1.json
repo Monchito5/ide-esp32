@@ -1,37 +1,47 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Contrato API - Modulo Herramientas (Espressif ESP-IDF & esptool)",
-  "version": "1.1.0",
+  "title": "Contrato API - Modulo Herramientas (Espressif ESP-IDF, Particiones, SSL NVS & esptool)",
+  "version": "1.2.0",
   "prefijo": "/api/v1/herramientas",
   "endpoints": {
-    "GET /puertos": {
-      "respuesta": { "total": 0, "puertos": [] }
-    },
-    "GET /placas-soportadas": {
-      "respuesta": { "total": 5, "placas": [] }
-    },
+    "GET /puertos": { "respuesta": { "total": 0, "puertos": [] } },
+    "GET /placas-soportadas": { "respuesta": { "total": 5, "placas": [] } },
     "GET /detectar-placa": {
       "parametros": { "puerto": "string?", "sondear": "boolean=false" },
-      "respuesta": {
-        "detectada": false,
-        "total_puertos": 0,
-        "total_esp32": 0,
-        "recomendada": null,
-        "dispositivos": [],
-        "herramienta": "espressif_usb_esptool"
-      }
+      "respuesta": { "detectada": false, "total_esp32": 0, "recomendada": null, "dispositivos": [] }
     },
     "GET /esp-idf/estado": {
-      "respuesta": {
-        "framework_principal": "Espressif ESP-IDF",
-        "esp_idf_disponible": false,
-        "idf_path": null,
-        "esptool_disponible": false,
-        "targets_soportados": ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6"]
-      }
+      "respuesta": { "framework_principal": "Espressif ESP-IDF", "esp_idf_disponible": false, "esptool_disponible": false }
     },
-    "GET /esp-idf/version": {
-      "respuesta": { "exitoso": true, "salida": "", "error": "" }
+    "GET /particiones/plantillas": {
+      "respuesta": { "total": 3, "plantillas": [] }
+    },
+    "POST /particiones/generar": {
+      "solicitud": { "csv_contenido": "string?", "plantilla_id": "string?", "nombre": "partition-table" },
+      "respuesta": { "exitoso": true, "offset_tabla": "0x8000", "bin_path": "string", "sha256": "string", "particiones": [] }
+    },
+    "POST /particiones/parsear": {
+      "solicitud": { "bin_path": "string" },
+      "respuesta": { "exitoso": true, "total": 0, "particiones": [] }
+    },
+    "POST /certificados/generar-nvs": {
+      "solicitud": { "ca_cert": "string?", "client_cert": "string?", "client_key": "string?", "namespace": "ssl_certs", "tamanio_bytes": 24576, "offset": "0x9000" },
+      "respuesta": { "exitoso": true, "nvs_bin_path": "string", "offset": "0x9000", "sha256": "string" }
+    },
+    "POST /esptool/bootloader": {
+      "solicitud": { "bootloader_path": "string", "target": "esp32s3", "puerto": "string?", "modo": "emulado", "verificar": true },
+      "respuesta": { "exitoso": true, "offset": "0x0", "verificado": true, "sha256": "string" }
+    },
+    "POST /esptool/flash-completo": {
+      "solicitud": { "target": "esp32s3", "modo": "emulado", "bootloader_path": "string", "partitions_path": "string", "nvs_certs_path": "string?", "app_path": "string", "verificar": true },
+      "respuesta": { "exitoso": true, "verificado": true, "segmentos": [], "sha256": "string" }
+    },
+    "POST /esptool/verificar-flash": {
+      "solicitud": { "target": "esp32s3", "modo": "emulado", "offset": "0x10000", "bin_path": "string" },
+      "respuesta": { "exitoso": true, "verificado": true }
+    },
+    "GET /historial-flash": {
+      "respuesta": { "total": 0, "historial": [] }
     },
     "GET /reportes/flash": {
       "respuesta": { "total": 0, "exitosos": 0, "fallidos": 0 }
