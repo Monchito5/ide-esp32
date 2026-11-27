@@ -1,12 +1,40 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Contrato API - Modulo Herramientas",
-  "version": "1.0.0",
+  "title": "Contrato API - Modulo Herramientas (Espressif ESP-IDF & esptool)",
+  "version": "1.1.0",
   "prefijo": "/api/v1/herramientas",
   "endpoints": {
-    "GET /puertos":            { "respuesta": { "total": 0, "puertos": [] } },
-    "GET /arduino/version":    { "respuesta": { "exitoso": true, "salida": "", "error": "" } },
-    "GET /arduino/placas":     { "respuesta": { "exitoso": true, "salida": "", "error": "" } },
-    "GET /reportes/flash":     { "respuesta": { "total": 0, "exitosos": 0, "fallidos": 0 } }
+    "GET /puertos": {
+      "respuesta": { "total": 0, "puertos": [] }
+    },
+    "GET /placas-soportadas": {
+      "respuesta": { "total": 5, "placas": [] }
+    },
+    "GET /detectar-placa": {
+      "parametros": { "puerto": "string?", "sondear": "boolean=false" },
+      "respuesta": {
+        "detectada": false,
+        "total_puertos": 0,
+        "total_esp32": 0,
+        "recomendada": null,
+        "dispositivos": [],
+        "herramienta": "espressif_usb_esptool"
+      }
+    },
+    "GET /esp-idf/estado": {
+      "respuesta": {
+        "framework_principal": "Espressif ESP-IDF",
+        "esp_idf_disponible": false,
+        "idf_path": null,
+        "esptool_disponible": false,
+        "targets_soportados": ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6"]
+      }
+    },
+    "GET /esp-idf/version": {
+      "respuesta": { "exitoso": true, "salida": "", "error": "" }
+    },
+    "GET /reportes/flash": {
+      "respuesta": { "total": 0, "exitosos": 0, "fallidos": 0 }
+    }
   }
 }

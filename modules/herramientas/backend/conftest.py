@@ -15,11 +15,13 @@ from pathlib import Path
 # conftest.py está en: modules/herramientas/backend/
 # El monorepo está en: ide-esp32/ (tres niveles arriba)
 MONOREPO_ROOT = Path(__file__).resolve().parents[3]
+BACKEND_DIR = Path(__file__).resolve().parent
 
-# Agregar el monorepo al path de Python para permitir imports absolutos
-# como: modules.herramientas.backend.herramientas_backend.controllers.x
+# Agregar el monorepo y el backend local al path de Python (PEP 420 sin __init__.py)
 if str(MONOREPO_ROOT) not in sys.path:
     sys.path.insert(0, str(MONOREPO_ROOT))
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 # Verificación de configuración
 print(f"\n[conftest.py] MONOREPO_ROOT configurado: {MONOREPO_ROOT}")
