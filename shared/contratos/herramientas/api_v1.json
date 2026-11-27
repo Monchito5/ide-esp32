@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Contrato API - Modulo Herramientas (Espressif ESP-IDF, Particiones, SSL NVS & esptool)",
-  "version": "1.2.0",
+  "title": "Contrato API - Modulo Herramientas (Espressif ESP-IDF, Particiones, SSL NVS, esptool, Monitor Serie & Plotter)",
+  "version": "1.3.0",
   "prefijo": "/api/v1/herramientas",
   "endpoints": {
     "GET /puertos": { "respuesta": { "total": 0, "puertos": [] } },
@@ -45,6 +45,43 @@
     },
     "GET /reportes/flash": {
       "respuesta": { "total": 0, "exitosos": 0, "fallidos": 0 }
+    },
+    "POST /monitor-serie/conectar": {
+      "solicitud": { "puerto": "COM3", "baudrate": 115200, "databits": 8, "stopbits": 1.0, "parity": "N", "modo": "auto", "auto_reconectar": true },
+      "respuesta": { "conectado": true, "estado": "conectado", "puerto": "COM3", "baudrate": 115200 }
+    },
+    "POST /monitor-serie/desconectar": {
+      "respuesta": { "conectado": false, "estado": "desconectado" }
+    },
+    "GET /monitor-serie/estado": {
+      "respuesta": { "conectado": false, "estado": "desconectado", "baudrates_soportados": [9600, 57600, 115200, 230400, 460800, 921600] }
+    },
+    "POST /monitor-serie/enviar": {
+      "solicitud": { "datos": "STATUS", "agregar_salto_linea": true },
+      "respuesta": { "enviado": true, "bytes_escritos": 8 }
+    },
+    "GET /monitor-serie/eventos": {
+      "parametros": { "desde_seq": 0, "nivel": "string?", "buscar": "string?", "regex": "string?", "limite": 500 },
+      "respuesta": { "total": 0, "ultimo_seq": 0, "eventos": [] }
+    },
+    "POST /monitor-serie/limpiar": {
+      "respuesta": { "limpiado": true, "eventos_eliminados": 0 }
+    },
+    "WS /monitor-serie/stream": {
+      "parametros": { "puerto": "string?", "baudrate": 115200, "modo": "auto" },
+      "mensajes": { "estado": {}, "evento": {} }
+    },
+    "POST /plotter/parsear": {
+      "solicitud": { "lineas": [] },
+      "respuesta": { "total_muestras": 0, "canales_disponibles": [], "muestras": [] }
+    },
+    "GET /plotter/muestras": {
+      "parametros": { "desde_seq": 0, "ventana": 120 },
+      "respuesta": { "total_muestras": 0, "canales_disponibles": [], "muestras": [] }
+    },
+    "GET /logs/exportar": {
+      "parametros": { "formato": "csv|txt|json", "nivel": "string?", "buscar": "string?", "regex": "string?" },
+      "respuesta": "attachment file"
     }
   }
 }

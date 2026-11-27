@@ -13,9 +13,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.setuptools]
-packages = ["herramientas_backend", "herramientas_backend.config",
-            "herramientas_backend.models", "herramientas_backend.controllers",
-            "herramientas_backend.utils"]
+packages = ["herramientas_backend", "herramientas_backend.controllers"]
 package-dir = {"" = "."}
 
 [tool.black]

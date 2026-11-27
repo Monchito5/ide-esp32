@@ -289,4 +289,136 @@ class ApiHerramientas {
       (d) => d as Map<String, dynamic>,
     );
   }
+
+  /// --- Monitor Serie, Plotter Serie y Exportacion de Logs (Sprint 5) ---
+
+  Future<ResultadoApi<Map<String, dynamic>>> conectarMonitorSerie({
+    String puerto = 'VIRTUAL',
+    int baudrate = 115200,
+    int databits = 8,
+    double stopbits = 1.0,
+    String parity = 'N',
+    String modo = 'auto',
+    bool autoReconectar = true,
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/monitor-serie/conectar'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'puerto': puerto,
+          'baudrate': baudrate,
+          'databits': databits,
+          'stopbits': stopbits,
+          'parity': parity,
+          'modo': modo,
+          'auto_reconectar': autoReconectar,
+        }),
+      ),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> desconectarMonitorSerie() async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(Uri.parse('$baseUrl/monitor-serie/desconectar')),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> estadoMonitorSerie() async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(Uri.parse('$baseUrl/monitor-serie/estado')),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> enviarMonitorSerie({
+    required String datos,
+    bool agregarSaltoLinea = true,
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/monitor-serie/enviar'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'datos': datos,
+          'agregar_salto_linea': agregarSaltoLinea,
+        }),
+      ),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> listarEventosMonitorSerie({
+    int desdeSeq = 0,
+    String? nivel,
+    String? buscar,
+    String? regex,
+    int limite = 500,
+  }) async {
+    final params = <String, String>{
+      'desde_seq': '$desdeSeq',
+      'limite': '$limite',
+      if (nivel != null && nivel.isNotEmpty && nivel != 'TODOS') 'nivel': nivel,
+      if (buscar != null && buscar.isNotEmpty) 'buscar': buscar,
+      if (regex != null && regex.isNotEmpty) 'regex': regex,
+    };
+    final uri = Uri.parse('$baseUrl/monitor-serie/eventos')
+        .replace(queryParameters: params);
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(uri),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> limpiarMonitorSerie() async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(Uri.parse('$baseUrl/monitor-serie/limpiar')),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> obtenerMuestrasPlotter({
+    int desdeSeq = 0,
+    int ventana = 120,
+  }) async {
+    final uri = Uri.parse('$baseUrl/plotter/muestras').replace(
+      queryParameters: {
+        'desde_seq': '$desdeSeq',
+        'ventana': '$ventana',
+      },
+    );
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(uri),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<String>> exportarLogs({
+    String formato = 'txt',
+    String? nivel,
+    String? buscar,
+    String? regex,
+  }) async {
+    final params = <String, String>{
+      'formato': formato,
+      if (nivel != null && nivel.isNotEmpty && nivel != 'TODOS') 'nivel': nivel,
+      if (buscar != null && buscar.isNotEmpty) 'buscar': buscar,
+      if (regex != null && regex.isNotEmpty) 'regex': regex,
+    };
+    final uri =
+        Uri.parse('$baseUrl/logs/exportar').replace(queryParameters: params);
+    try {
+      final r = await http.get(uri);
+      if (r.statusCode != 200) {
+        return ResultadoApi.error('Error HTTP ${r.statusCode}');
+      }
+      return ResultadoApi.ok(utf8.decode(r.bodyBytes));
+    } on SocketException {
+      return ResultadoApi.error('No se pudo conectar con el backend');
+    } catch (e) {
+      return ResultadoApi.error('Error inesperado: $e');
+    }
+  }
 }

@@ -5,6 +5,8 @@ library ide_core;
 export 'nucleo/acciones_ayuda.dart';
 export 'nucleo/modulo_ide.dart';
 export 'nucleo/registro_modulos.dart';
+export 'ui/componentes/panel_monitor_serie.dart';
+export 'ui/componentes/panel_plotter_serie.dart';
 export 'ui/layout/layout_principal.dart';
 export 'ui/temas/tema_ide.dart';
 export 'servicios/api_core.dart';

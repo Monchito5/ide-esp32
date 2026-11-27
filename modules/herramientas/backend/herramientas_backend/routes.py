@@ -21,6 +21,18 @@ from herramientas_backend.controllers.esptool_service import (
     listar_historial_flash,
     verificar_flash,
 )
+from herramientas_backend.controllers.monitor_serie import (
+    conectar_monitor_serie,
+    desconectar_monitor_serie,
+    enviar_monitor_serie,
+    estado_monitor_serie,
+    exportar_logs_herramientas,
+    limpiar_monitor_serie,
+    listar_eventos_monitor_serie,
+    monitor_serie_ws,
+    obtener_muestras_plotter_endpoint,
+    parsear_lote_plotter,
+)
 from herramientas_backend.controllers.particiones import (
     generar_tabla_particiones,
     listar_plantillas_particiones,
@@ -75,6 +87,26 @@ router.add_api_route("/historial-flash", listar_historial_flash, methods=["GET"]
 
 # Reportes de flasheo
 router.add_api_route("/reportes/flash", resumen_flash, methods=["GET"])
+
+# Sprint 5: Monitor Serie bidireccional, Plotter Serie multicanal y Exportacion de Logs
+router.add_api_route(
+    "/monitor-serie/conectar", conectar_monitor_serie, methods=["POST"]
+)
+router.add_api_route(
+    "/monitor-serie/desconectar", desconectar_monitor_serie, methods=["POST"]
+)
+router.add_api_route("/monitor-serie/estado", estado_monitor_serie, methods=["GET"])
+router.add_api_route("/monitor-serie/enviar", enviar_monitor_serie, methods=["POST"])
+router.add_api_route(
+    "/monitor-serie/eventos", listar_eventos_monitor_serie, methods=["GET"]
+)
+router.add_api_route("/monitor-serie/limpiar", limpiar_monitor_serie, methods=["POST"])
+router.add_api_websocket_route("/monitor-serie/stream", monitor_serie_ws)
+router.add_api_route("/plotter/parsear", parsear_lote_plotter, methods=["POST"])
+router.add_api_route(
+    "/plotter/muestras", obtener_muestras_plotter_endpoint, methods=["GET"]
+)
+router.add_api_route("/logs/exportar", exportar_logs_herramientas, methods=["GET"])
 
 # Adaptadores secundarios opcionales (PlatformIO / Arduino CLI)
 router.add_api_route("/arduino/version", obtener_version, methods=["GET"])

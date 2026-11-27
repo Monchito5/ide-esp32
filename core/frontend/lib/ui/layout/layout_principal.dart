@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import '../../nucleo/acciones_ayuda.dart';
 import '../../nucleo/registro_modulos.dart';
 import '../componentes/dialogos_flash_sprint4.dart';
+import '../componentes/panel_monitor_serie.dart';
+import '../componentes/panel_plotter_serie.dart';
 import '../temas/tema_ide.dart';
 
 const String _plantillaEspIdfPredeterminada = '''#include <stdio.h>
@@ -642,52 +644,70 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   child: Column(
                     children: [
                       Expanded(
-                        child: Container(
-                          color: Colors.white,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 38,
-                                color: Colors.grey.shade100,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
-                                child: ListView.builder(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: totalLineas,
-                                  itemBuilder: (context, index) => Text(
-                                    '${index + 1}',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 11,
-                                      fontFamily: 'monospace',
+                        child: _indiceNavRail == 3
+                            ? PanelMonitorSerie(
+                                apiBase: _apiBase,
+                                puertoSugerido: _puertoSeleccionado,
+                                modoSimulacion: esSimulacion,
+                                onLogIde: _agregarLog,
+                                onAbrirPlotter: () =>
+                                    setState(() => _indiceNavRail = 4),
+                              )
+                            : _indiceNavRail == 4
+                                ? PanelPlotterSerie(
+                                    apiBase: _apiBase,
+                                    onLogIde: _agregarLog,
+                                  )
+                                : Container(
+                                    color: Colors.white,
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 38,
+                                          color: Colors.grey.shade100,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12),
+                                          child: ListView.builder(
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            itemCount: totalLineas,
+                                            itemBuilder: (context, index) =>
+                                                Text(
+                                              '${index + 1}',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.grey.shade500,
+                                                fontSize: 11,
+                                                fontFamily: 'monospace',
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const VerticalDivider(width: 1),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: TextField(
+                                              controller: _codigoController,
+                                              onChanged: (_) => setState(() {}),
+                                              maxLines: null,
+                                              keyboardType:
+                                                  TextInputType.multiline,
+                                              style: const TextStyle(
+                                                fontFamily: 'monospace',
+                                                fontSize: 13,
+                                              ),
+                                              decoration: const InputDecoration(
+                                                border: InputBorder.none,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ),
-                              const VerticalDivider(width: 1),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextField(
-                                    controller: _codigoController,
-                                    onChanged: (_) => setState(() {}),
-                                    maxLines: null,
-                                    keyboardType: TextInputType.multiline,
-                                    style: const TextStyle(
-                                      fontFamily: 'monospace',
-                                      fontSize: 13,
-                                    ),
-                                    decoration: const InputDecoration(
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                       const Divider(height: 1),
                       Container(
@@ -1216,8 +1236,9 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
         return;
       }
       if (valor == 'Monitor Serie') {
+        setState(() => _indiceNavRail = 3);
         _agregarLog(
-          'Monitor Serie preparado para $_puertoSeleccionado (115200 baud).',
+          'Monitor Serie abierto para $_puertoSeleccionado.',
         );
         return;
       }
