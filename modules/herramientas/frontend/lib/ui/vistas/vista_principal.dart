@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../../servicios/api_herramientas.dart';
 import '../../servicios/api_ide.dart';
 
-/// Vista principal del modulo Herramientas con barra lateral de navegacion.
-///
-/// Fusiona la vista original de herramientas (estado, botones rapidos y lista
-/// de puertos) con la barra lateral (NavigationRail) del mockup:
-/// Sketch, Placas, Librerias, Monitor, Plotter e Informacion de la placa.
+/// Vista principal del modulo Herramientas orientada al ecosistema Espressif ESP-IDF.
 class VistaPrincipal extends StatefulWidget {
   const VistaPrincipal({super.key, required this.api, required this.ideApi});
 
@@ -20,7 +16,7 @@ class VistaPrincipal extends StatefulWidget {
 
 class _VistaPrincipalState extends State<VistaPrincipal> {
   List<Map<String, dynamic>> _puertos = const [];
-  String _estado = 'Verificando backend...';
+  String _estado = 'Verificando backend y toolchain Espressif...';
   bool _moduloActivo = false;
 
   @override
@@ -30,27 +26,34 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
   }
 
   Future<void> _refrescar() async {
-    // Obtener puertos serie
     final rPuertos = await widget.api.listarPuertos();
     if (!rPuertos.ok) {
+      if (!mounted) return;
       setState(() => _estado = 'Error puertos: ${rPuertos.error}');
       return;
     }
 
-    // Verificar si el modulo esta activo
     final moduloActivo = await widget.ideApi.moduloActivo('herramientas');
+    if (!mounted) return;
+
+    final lista = rPuertos.data ?? const [];
+    final espDetectadas = lista.where((p) => p['es_esp32'] == true).length;
 
     setState(() {
-      _puertos = rPuertos.data ?? const [];
+      _puertos = lista;
       _moduloActivo = moduloActivo;
       _estado =
-          'Puertos detectados: ${_puertos.length} | Modulo: ${moduloActivo ? "Activo" : "Inactivo"}';
+          'Puertos: ${_puertos.length} (ESP32: $espDetectadas) | Modulo: ${moduloActivo ? "Activo" : "Inactivo"}';
     });
   }
 
-  void _mostrarError(String mensaje) {
+  void _mostrarMensaje(String mensaje, {bool esError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: esError ? Colors.red : Colors.teal.shade700,
+      ),
     );
   }
 
@@ -60,32 +63,27 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Estado general
           Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        _moduloActivo ? Icons.check_circle : Icons.error,
-                        color: _moduloActivo ? Colors.green : Colors.red,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _estado,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ],
+                  Icon(
+                    _moduloActivo ? Icons.check_circle : Icons.error,
+                    color: _moduloActivo ? Colors.green : Colors.red,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _estado,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          // Botones de acciones rapidas
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -97,46 +95,69 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
               ),
               ElevatedButton.icon(
                 onPressed: () async {
-                  final r = await widget.api.listarPlacas();
-                  if (!r.ok) _mostrarError('Placas: ${r.error}');
+                  final r = await widget.api.detectarPlaca(sondear: true);
+                  if (!r.ok) {
+                    _mostrarMensaje('Deteccion: ${r.error}', esError: true);
+                    return;
+                  }
+                  final rec = r.data?['recomendada'] as Map<String, dynamic>?;
+                  if (rec != null) {
+                    _mostrarMensaje(
+                      'Detectada ${rec['placa_sugerida']} (${rec['target_idf']}) en ${rec['dispositivo']}',
+                    );
+                  } else {
+                    _mostrarMensaje(
+                      'No se detectaron placas Espressif ESP32 conectadas.',
+                      esError: true,
+                    );
+                  }
+                },
+                icon: const Icon(Icons.usb),
+                label: const Text('Detectar Placa ESP32'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final r = await widget.api.estadoEspIdf();
+                  if (!r.ok) {
+                    _mostrarMensaje('Estado ESP-IDF: ${r.error}',
+                        esError: true);
+                    return;
+                  }
+                  final disp = r.data?['esp_idf_disponible'] == true;
+                  final ver = r.data?['version'] ?? 'No instalado';
+                  _mostrarMensaje(
+                    disp
+                        ? 'Espressif ESP-IDF disponible: $ver'
+                        : 'ESP-IDF no detectado (configure IDF_PATH).',
+                    esError: !disp,
+                  );
+                },
+                icon: const Icon(Icons.developer_board),
+                label: const Text('Estado ESP-IDF'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final r = await widget.api.listarPlacasSoportadas();
+                  if (!r.ok) {
+                    _mostrarMensaje('Perfiles: ${r.error}', esError: true);
+                    return;
+                  }
+                  _mostrarMensaje(
+                    'Perfiles Espressif soportados: ${r.data?.length ?? 0}',
+                  );
                 },
                 icon: const Icon(Icons.memory),
-                label: const Text('Placas Arduino'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final r = await widget.api.versionArduinoCli();
-                  if (!r.ok) _mostrarError('Version Arduino: ${r.error}');
-                },
-                icon: const Icon(Icons.info),
-                label: const Text('Version Arduino'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final r = await widget.api.estadoPlatformIO();
-                  if (!r.ok) _mostrarError('Estado PlatformIO: ${r.error}');
-                },
-                icon: const Icon(Icons.build),
-                label: const Text('Estado PlatformIO'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final r = await widget.api.versionEspIdf();
-                  if (!r.ok) _mostrarError('Version ESP-IDF: ${r.error}');
-                },
-                icon: const Icon(Icons.settings),
-                label: const Text('Version ESP-IDF'),
+                label: const Text('Perfiles ESP-IDF'),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          // Lista de puertos
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Puertos Serie ($_puertos.length)',
+                  'Puertos Serie (${_puertos.length})',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -145,11 +166,21 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                     itemCount: _puertos.length,
                     itemBuilder: (context, i) {
                       final p = _puertos[i];
+                      final esEsp = p['es_esp32'] == true;
+                      final placa = p['placa_sugerida'] as String?;
+                      final target = p['target_idf'] as String?;
                       return ListTile(
-                        leading: const Icon(Icons.usb),
-                        title: Text(p['dispositivo'] ?? ''),
-                        subtitle: Text(p['descripcion'] ?? ''),
-                        trailing: Text(p['fabricante'] ?? ''),
+                        leading: Icon(
+                          esEsp ? Icons.developer_board : Icons.usb,
+                          color: esEsp ? Colors.green : null,
+                        ),
+                        title: Text(p['dispositivo']?.toString() ?? ''),
+                        subtitle: Text(
+                          esEsp && placa != null
+                              ? '$placa (target: $target) — ${p['descripcion'] ?? ''}'
+                              : (p['descripcion']?.toString() ?? ''),
+                        ),
+                        trailing: Text(p['fabricante']?.toString() ?? ''),
                       );
                     },
                   ),

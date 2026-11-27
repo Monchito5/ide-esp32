@@ -7,12 +7,71 @@ import '../../nucleo/acciones_ayuda.dart';
 import '../../nucleo/registro_modulos.dart';
 import '../temas/tema_ide.dart';
 
-/// Layout maestro rediseñado del IDE para escritorio.
+const String _plantillaEspIdfPredeterminada = '''#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+void app_main(void) {
+  printf("IDE ESP32 — Firmware iniciado con Espressif ESP-IDF\\n");
+  while (1) {
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+}''';
+
+const List<Map<String, dynamic>> _perfilesEspressifLocales = [
+  {
+    'nombre': 'ESP32-S3 DevKitC-1',
+    'target_idf': 'esp32s3',
+    'chip': 'ESP32-S3',
+    'arquitectura': 'Xtensa dual-core 32-bit LX7',
+    'frecuencia_mhz': 240,
+    'flash_mb': 8,
+    'bootloader_offset': '0x0',
+  },
+  {
+    'nombre': 'ESP32-C3 DevKitM-1',
+    'target_idf': 'esp32c3',
+    'chip': 'ESP32-C3',
+    'arquitectura': 'RISC-V single-core 32-bit',
+    'frecuencia_mhz': 160,
+    'flash_mb': 4,
+    'bootloader_offset': '0x0',
+  },
+  {
+    'nombre': 'ESP32 DevKitC V4',
+    'target_idf': 'esp32',
+    'chip': 'ESP32',
+    'arquitectura': 'Xtensa dual-core 32-bit LX6',
+    'frecuencia_mhz': 240,
+    'flash_mb': 4,
+    'bootloader_offset': '0x1000',
+  },
+  {
+    'nombre': 'ESP32-S2 Saola-1',
+    'target_idf': 'esp32s2',
+    'chip': 'ESP32-S2',
+    'arquitectura': 'Xtensa single-core 32-bit LX7',
+    'frecuencia_mhz': 240,
+    'flash_mb': 4,
+    'bootloader_offset': '0x1000',
+  },
+  {
+    'nombre': 'ESP32-C6 DevKitC-1',
+    'target_idf': 'esp32c6',
+    'chip': 'ESP32-C6',
+    'arquitectura': 'RISC-V 32-bit (Wi-Fi 6 / BLE / 802.15.4)',
+    'frecuencia_mhz': 160,
+    'flash_mb': 8,
+    'bootloader_offset': '0x0',
+  },
+];
+
+/// Layout maestro del IDE orientado al flujo nativo Espressif ESP-IDF.
 class LayoutPrincipal extends StatefulWidget {
   const LayoutPrincipal({
     super.key,
     required this.registro,
-    this.titulo = 'IDE ESP32-S31 — Sketch sin título',
+    this.titulo = 'IDE ESP32 — Proyecto ESP-IDF',
     this.accionesAyuda,
   });
 
@@ -27,34 +86,69 @@ class LayoutPrincipal extends StatefulWidget {
 }
 
 class _LayoutPrincipalState extends State<LayoutPrincipal> {
+  static const String _apiBase = 'http://127.0.0.1:8765/api/v1';
+
   int _indiceNavRail = 0;
-  String _placaSeleccionada = 'ESP32-S31 Dev Module';
+  List<Map<String, dynamic>> _perfilesPlacas =
+      List.of(_perfilesEspressifLocales);
+  String _placaSeleccionada = 'ESP32-S3 DevKitC-1';
+  String _targetIdfSeleccionado = 'esp32s3';
   String _puertoSeleccionado = 'Buscando...';
-  String _modoOperacion =
-      'Modo Físico'; // 'Modo Físico' (predeterminado) o 'Modo Simulación'
+  String? _macDetectada;
+  String _modoOperacion = 'Modo Físico';
   String _estadoIde = 'Listo';
+  bool _compilando = false;
 
   final TextEditingController _codigoController = TextEditingController(
-    text:
-        'void setup() {\n  Serial.begin(115200);\n}\n\nvoid loop() {\n  // código aquí\n}',
+    text: _plantillaEspIdfPredeterminada,
   );
 
   final List<String> _logsConsola = [
     'Salida:',
-    'Compilando sketch...',
-    'Cargando en placa...',
-    'Listo.',
+    'Entorno IDE ESP32 inicializado (Toolchain objetivo: Espressif ESP-IDF).',
   ];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _detectarPlacaYPuertoFisico();
+      _inicializarConexionHardware();
+    });
+  }
+
+  @override
+  void dispose() {
+    _codigoController.dispose();
+    super.dispose();
+  }
+
+  Map<String, dynamic> _perfilActual() {
+    for (final perfil in _perfilesPlacas) {
+      if (perfil['nombre'] == _placaSeleccionada) {
+        return perfil;
+      }
+    }
+    return _perfilesPlacas.first;
+  }
+
+  void _seleccionarPlacaPorNombre(String nombrePlaca) {
+    Map<String, dynamic>? encontrado;
+    for (final perfil in _perfilesPlacas) {
+      if (perfil['nombre'] == nombrePlaca) {
+        encontrado = perfil;
+        break;
+      }
+    }
+    setState(() {
+      _placaSeleccionada = nombrePlaca;
+      if (encontrado != null && encontrado['target_idf'] != null) {
+        _targetIdfSeleccionado = encontrado['target_idf'].toString();
+      }
     });
   }
 
   void _agregarLog(String mensaje) {
+    if (!mounted) return;
     setState(() {
       _logsConsola.add(mensaje);
       _estadoIde = mensaje.replaceAll('...', '').trim();
@@ -62,69 +156,244 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
     });
   }
 
-  Future<void> _detectarPlacaYPuertoFisico() async {
-    _agregarLog('Buscando placa ESP32 conectada en puertos físicos...');
+  Future<void> _inicializarConexionHardware() async {
+    await _cargarCatalogoPlacas();
+    await _detectarPlacaYPuertoFisico();
+  }
+
+  Future<void> _cargarCatalogoPlacas() async {
     try {
-      final response = await http
-          .get(Uri.parse('http://127.0.0.1:8765/api/v1/herramientas/puertos'))
+      final resp = await http
+          .get(Uri.parse('$_apiBase/herramientas/placas-soportadas'))
           .timeout(const Duration(seconds: 2));
+      if (resp.statusCode == 200) {
+        final datos = jsonDecode(resp.body) as Map<String, dynamic>;
+        final lista =
+            (datos['placas'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        if (lista.isNotEmpty && mounted) {
+          setState(() {
+            _perfilesPlacas = lista;
+          });
+        }
+      }
+    } catch (_) {
+      // Mantiene el catalogo local de perfiles Espressif si el backend esta offline.
+    }
+  }
+
+  Future<void> _detectarPlacaYPuertoFisico(
+      {bool sondearEsptool = false}) async {
+    _agregarLog(
+      sondearEsptool
+          ? 'Sondeando placa ESP32 con Espressif esptool...'
+          : 'Detectando placas Espressif ESP32 en puertos USB...',
+    );
+    try {
+      final uri = Uri.parse(
+        '$_apiBase/herramientas/detectar-placa?sondear=${sondearEsptool ? "true" : "false"}',
+      );
+      final response = await http.get(uri).timeout(
+            Duration(seconds: sondearEsptool ? 6 : 2),
+          );
       if (response.statusCode == 200) {
         final datos = jsonDecode(response.body) as Map<String, dynamic>;
-        final puertos =
-            (datos['puertos'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        if (puertos.isNotEmpty) {
-          final primerPuerto =
-              puertos.first['dispositivo'] as String? ?? 'COM3';
-          final descripcion =
-              puertos.first['descripcion'] as String? ?? 'ESP32-S3 Hardware';
-          setState(() {
-            _puertoSeleccionado = primerPuerto;
-          });
+        final recomendada = datos['recomendada'] as Map<String, dynamic>?;
+        if (datos['detectada'] == true && recomendada != null) {
+          final puerto = recomendada['dispositivo']?.toString() ?? 'COM3';
+          final placa =
+              recomendada['placa_sugerida']?.toString() ?? _placaSeleccionada;
+          final target =
+              recomendada['target_idf']?.toString() ?? _targetIdfSeleccionado;
+          final mac = recomendada['mac']?.toString();
+          if (mounted) {
+            setState(() {
+              _puertoSeleccionado = puerto;
+              _placaSeleccionada = placa;
+              _targetIdfSeleccionado = target;
+              _macDetectada = mac;
+            });
+          }
+          final detalleMac = mac != null ? ' | MAC: $mac' : '';
           _agregarLog(
-              'Placa ESP32 detectada automáticamente en $primerPuerto ($descripcion).');
-        } else {
-          setState(() {
-            _puertoSeleccionado = 'No detectado';
-          });
-          _agregarLog(
-              'AVISO: No se detecta ninguna placa conectada. Verifique la conexión USB.');
+            'Placa detectada: $placa (target ESP-IDF: $target) en $puerto$detalleMac.',
+          );
+          return;
         }
-      } else {
+      }
+
+      if (mounted) {
         setState(() {
           _puertoSeleccionado = 'No detectado';
+          _macDetectada = null;
         });
+      }
+      _agregarLog(
+        'AVISO: No se detecto placa ESP32 en USB. Puedes compilar con ESP-IDF o usar Modo Simulacion.',
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _puertoSeleccionado = 'No detectado';
+          _macDetectada = null;
+        });
+      }
+      _agregarLog(
+        'AVISO: Backend local no disponible en 127.0.0.1:8765 (deteccion USB offline).',
+      );
+    }
+  }
+
+  Future<void> _verificarEstadoEspIdf() async {
+    _agregarLog('Consultando estado de Espressif ESP-IDF y esptool...');
+    try {
+      final resp = await http
+          .get(Uri.parse('$_apiBase/herramientas/esp-idf/estado'))
+          .timeout(const Duration(seconds: 4));
+      if (resp.statusCode == 200) {
+        final d = jsonDecode(resp.body) as Map<String, dynamic>;
+        final idfOk = d['esp_idf_disponible'] == true;
+        final esptoolOk = d['esptool_disponible'] == true;
+        final version = d['version'] ?? 'No detectada';
+        final ruta = d['idf_path'] ?? d['idf_py_en_path'] ?? 'No configurada';
         _agregarLog(
-            'AVISO: No se detecta ninguna placa conectada. Verifique la conexión USB.');
+          'ESP-IDF: ${idfOk ? "Disponible ($version) en $ruta" : "No instalado (configure IDF_PATH)"} | '
+          'esptool: ${esptoolOk ? "Disponible" : "No encontrado"}',
+        );
+      } else {
+        _agregarLog(
+            'Error HTTP ${resp.statusCode} al consultar estado ESP-IDF.');
       }
     } catch (e) {
-      setState(() {
-        _puertoSeleccionado = 'No detectado';
-      });
+      _agregarLog('No se pudo consultar el backend para ESP-IDF: $e');
+    }
+  }
+
+  Future<void> _compilarConEspIdf({bool mostrarRutasBinarios = false}) async {
+    if (_compilando) return;
+    setState(() => _compilando = true);
+    _agregarLog(
+      'Iniciando compilacion nativa Espressif ESP-IDF para $_placaSeleccionada (target: $_targetIdfSeleccionado)...',
+    );
+
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('$_apiBase/sketch/compilar-codigo'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'codigo': _codigoController.text,
+              'nombre_proyecto': 'esp32_sketch',
+              'nombre_archivo': 'main.c',
+              'target': _targetIdfSeleccionado,
+              'incluir_base64': false,
+            }),
+          )
+          .timeout(const Duration(minutes: 10));
+
+      if (resp.statusCode == 200) {
+        final datos = jsonDecode(resp.body) as Map<String, dynamic>;
+        final advertencias =
+            (datos['warnings'] as List?)?.map((e) => e.toString()).toList() ??
+                const [];
+        for (final adv in advertencias) {
+          _agregarLog(adv);
+        }
+
+        final logs = datos['compilation_logs']?.toString() ?? '';
+        if (logs.trim().isNotEmpty) {
+          final lineas = logs.trim().split('\n');
+          final ultimas =
+              lineas.length > 8 ? lineas.sublist(lineas.length - 8) : lineas;
+          for (final l in ultimas) {
+            if (l.trim().isNotEmpty) _agregarLog('[idf.py] $l');
+          }
+        }
+
+        if (datos['success'] == true) {
+          final binarios =
+              (datos['binaries'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          _agregarLog(
+            datos['result_summary']?.toString() ??
+                'Compilacion ESP-IDF completada exitosamente.',
+          );
+          for (final bin in binarios) {
+            final nombre = bin['filename'];
+            final offset = bin['flash_offset'];
+            final bytes = bin['size_bytes'];
+            final extra =
+                mostrarRutasBinarios ? ' -> ${bin['absolute_path']}' : '';
+            _agregarLog('  Artefacto: $nombre @ $offset ($bytes bytes)$extra');
+          }
+        } else {
+          final errores =
+              (datos['errors'] as List?)?.map((e) => e.toString()).toList() ??
+                  const [];
+          _agregarLog(
+            datos['result_summary']?.toString() ??
+                'Fallo en la compilacion ESP-IDF.',
+          );
+          for (final err in errores) {
+            _agregarLog('ERROR ESP-IDF: $err');
+          }
+        }
+      } else {
+        _agregarLog(
+          'Error del servidor al compilar (HTTP ${resp.statusCode}): ${resp.body}',
+        );
+      }
+    } catch (e) {
       _agregarLog(
-          'AVISO: No se detecta ninguna placa conectada. Verifique la conexión USB (Backend offline).');
+        'No se pudo conectar al motor de compilacion ESP-IDF en el backend: $e',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _compilando = false);
+      }
     }
   }
 
   Future<void> _ejecutarSimulacionCircuito() async {
-    _agregarLog('Iniciando simulador de circuitos electrónicos y lógica...');
-    await Future.delayed(const Duration(milliseconds: 300));
     _agregarLog(
-        'Circuito virtual activo: ESP32-S3 conectado a LED RGB y Sensor DHT22.');
-    await Future.delayed(const Duration(milliseconds: 300));
+      'Iniciando sesion virtual para $_placaSeleccionada ($_targetIdfSeleccionado)...',
+    );
+    try {
+      final resp = await http
+          .post(
+            Uri.parse('$_apiBase/simulacion/sesiones'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'chip': _perfilActual()['chip'] ?? 'ESP32-S3',
+              'motor': 'esp_emulator',
+              'nombre': 'Sesion $_placaSeleccionada',
+            }),
+          )
+          .timeout(const Duration(seconds: 3));
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        final d = jsonDecode(resp.body) as Map<String, dynamic>;
+        _agregarLog(
+          'Sesion de simulacion activa (ID: ${d['sesion_id'] ?? 'virtual'}) para $_placaSeleccionada.',
+        );
+        return;
+      }
+    } catch (_) {
+      // Fallback informativo local si el backend no responde.
+    }
     _agregarLog(
-        'Simulación en ejecución: recibiendo datos virtuales por bus GPIO.');
+      'Modo Simulacion preparado localmente para $_placaSeleccionada ($_targetIdfSeleccionado).',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final bool esSimulacion = _modoOperacion == 'Modo Simulación';
+    final lineasCodigo = _codigoController.text.split('\n').length;
+    final totalLineas = lineasCodigo < 15 ? 15 : lineasCodigo;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.titulo, style: const TextStyle(fontSize: 15)),
         backgroundColor: TemaIde.colorPrimario,
         actions: [
-          // Selector de Modo (Físico vs Simulación)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
             child: Container(
@@ -151,12 +420,10 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   if (newValue != null) {
                     setState(() => _modoOperacion = newValue);
                     if (newValue == 'Modo Simulación') {
-                      _agregarLog(
-                          'Cambiado a Modo Simulación (Diseño de circuitos y lógica).');
+                      _agregarLog('Cambiado a Modo Simulación.');
                       _ejecutarSimulacionCircuito();
                     } else {
-                      _agregarLog(
-                          'Cambiado a Modo Físico (Hardware conectado).');
+                      _agregarLog('Cambiado a Modo Físico (Hardware USB).');
                       _detectarPlacaYPuertoFisico();
                     }
                   }
@@ -164,7 +431,6 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
               ),
             ),
           ),
-          // Selector rápido de Puerto Físico (Solo visible en Modo Físico)
           if (!esSimulacion)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
@@ -204,21 +470,24 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                 ),
               ),
             ),
-          // Boton Verificar (Compilar)
           IconButton(
-            icon: const Icon(Icons.check_circle_outline,
-                color: Colors.greenAccent, size: 20),
-            tooltip: 'Verificar / Compilar',
-            onPressed: () {
-              _agregarLog(esSimulacion
-                  ? 'Compilando lógica para simulación...'
-                  : 'Compilando para hardware físico...');
-              Future.delayed(const Duration(seconds: 1), () {
-                _agregarLog('Compilación exitosa.');
-              });
-            },
+            icon: _compilando
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.greenAccent,
+                    ),
+                  )
+                : const Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.greenAccent,
+                    size: 20,
+                  ),
+            tooltip: 'Compilar con ESP-IDF',
+            onPressed: _compilando ? null : () => _compilarConEspIdf(),
           ),
-          // Boton Subir / Ejecutar Simulación
           IconButton(
             icon: Icon(
               esSimulacion ? Icons.play_arrow : Icons.arrow_forward_ios,
@@ -226,22 +495,19 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
               size: 20,
             ),
             tooltip: esSimulacion
-                ? 'Iniciar Simulación de Circuito'
-                : 'Subir firmware a placa',
-            onPressed: () {
+                ? 'Iniciar Simulación de Placa'
+                : 'Compilar y preparar flasheo esptool',
+            onPressed: () async {
               if (esSimulacion) {
-                _ejecutarSimulacionCircuito();
+                await _ejecutarSimulacionCircuito();
               } else {
-                if (_puertoSeleccionado == 'No detectado') {
+                if (_puertoSeleccionado == 'No detectado' ||
+                    _puertoSeleccionado == 'Buscando...') {
                   _agregarLog(
-                      'ERROR: No hay ninguna placa ESP32 conectada. Verifique la conexión USB antes de flashear.');
+                    'ERROR: No hay placa ESP32 detectada en USB. Conecte la placa o elija un puerto antes de flashear.',
+                  );
                 } else {
-                  _agregarLog(
-                      'Flasheando firmware real en placa ESP32 ($_puertoSeleccionado)...');
-                  Future.delayed(const Duration(seconds: 1), () {
-                    _agregarLog(
-                        'Flasheo físico completado exitosamente en $_puertoSeleccionado.');
-                  });
+                  await _compilarConEspIdf(mostrarRutasBinarios: true);
                 }
               }
             },
@@ -251,21 +517,31 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
       ),
       body: Column(
         children: [
-          // Barra de Menús estilo Desktop
           Container(
             color: Colors.grey.shade200,
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Row(
               children: [
                 _buildMenuButton(
-                    context, 'Archivo', ['Nuevo', 'Abrir', 'Guardar', 'Salir']),
-                _buildMenuButton(context, 'Editar',
-                    ['Deshacer', 'Rehacer', 'Cortar', 'Copiar', 'Pegar']),
-                _buildMenuButton(context, 'Sketch',
-                    ['Verificar / Compilar', 'Subir', 'Exportar binario']),
+                  context,
+                  'Archivo',
+                  ['Nuevo', 'Abrir', 'Guardar', 'Salir'],
+                ),
+                _buildMenuButton(
+                  context,
+                  'Editar',
+                  ['Deshacer', 'Rehacer', 'Cortar', 'Copiar', 'Pegar'],
+                ),
+                _buildMenuButton(
+                  context,
+                  'Sketch',
+                  ['Verificar / Compilar', 'Subir', 'Exportar binario'],
+                ),
                 _buildMenuButton(context, 'Herramientas', [
                   'Placa',
                   'Puerto',
+                  'Detectar placa ESP32',
+                  'Estado ESP-IDF',
                   'Auto Formato',
                   'Monitor Serie',
                   'Recargar datos',
@@ -275,22 +551,25 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   'Preguntas frecuentes',
                   'Créditos',
                   'Acerca de',
-                  'Enlaces rápidos'
+                  'Enlaces rápidos',
                 ]),
                 const Spacer(),
               ],
             ),
           ),
           const Divider(height: 1),
-          // Área principal: Editor y Consola (o Diseñador de Circuitos en Simulación)
           Expanded(
             child: Row(
               children: [
-                // Barra lateral (NavigationRail) con 6 accesos del mockup
                 NavigationRail(
                   selectedIndex: _indiceNavRail,
                   onDestinationSelected: (index) {
                     setState(() => _indiceNavRail = index);
+                    if (index == 1) {
+                      _mostrarDialogoPlaca(context);
+                    } else if (index == 5) {
+                      _mostrarModalInformacionPlaca(context);
+                    }
                   },
                   labelType: NavigationRailLabelType.all,
                   backgroundColor: TemaIde.colorPrimario,
@@ -335,45 +614,42 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   ],
                 ),
                 const VerticalDivider(width: 1, thickness: 1),
-                // Panel de Código y Consola
                 Expanded(
                   flex: 1,
                   child: Column(
                     children: [
-                      // Editor de Código
                       Expanded(
                         child: Container(
                           color: Colors.white,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Números de línea simulados
                               Container(
-                                width: 35,
+                                width: 38,
                                 color: Colors.grey.shade100,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
-                                child: Column(
-                                  children: List.generate(
-                                    15,
-                                    (index) => Text(
-                                      '${index + 1}',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade500,
-                                        fontSize: 11,
-                                        fontFamily: 'monospace',
-                                      ),
+                                child: ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: totalLineas,
+                                  itemBuilder: (context, index) => Text(
+                                    '${index + 1}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
                                     ),
                                   ),
                                 ),
                               ),
                               const VerticalDivider(width: 1),
-                              // Campo de texto del editor
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextField(
                                     controller: _codigoController,
+                                    onChanged: (_) => setState(() {}),
                                     maxLines: null,
                                     keyboardType: TextInputType.multiline,
                                     style: const TextStyle(
@@ -391,19 +667,18 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                         ),
                       ),
                       const Divider(height: 1),
-                      // Consola de Salida
                       Container(
-                        height: 90,
+                        height: 110,
                         color: TemaIde.colorConsola,
                         padding: const EdgeInsets.all(6),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
                               children: [
                                 Text(
-                                  'SALIDA DE CONSOLA',
-                                  style: TextStyle(
+                                  'SALIDA ESP-IDF (${_targetIdfSeleccionado.toUpperCase()})',
+                                  style: const TextStyle(
                                     color: Colors.white70,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -436,23 +711,22 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
               ],
             ),
           ),
-          // Barra de Estado Inferior
           Container(
             color: TemaIde.colorPrimario,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             child: Row(
               children: [
                 SizedBox(
-                  width: 110,
+                  width: 185,
                   child: Text(
-                    _placaSeleccionada,
+                    '$_placaSeleccionada ($_targetIdfSeleccionado)',
                     style: const TextStyle(color: Colors.white, fontSize: 11),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Text(' | ', style: TextStyle(color: Colors.white54)),
                 SizedBox(
-                  width: 130,
+                  width: 140,
                   child: Text(
                     esSimulacion
                         ? 'Simulación'
@@ -470,12 +744,14 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                   child: Text(
                     _estadoIde,
                     style: const TextStyle(
-                        color: Colors.greenAccent, fontSize: 11),
+                      color: Colors.greenAccent,
+                      fontSize: 11,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Text(
-                  'v1.0.0',
+                  'ESP-IDF | v1.0.0',
                   style: TextStyle(color: Colors.white54, fontSize: 11),
                 ),
               ],
@@ -487,13 +763,18 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
   }
 
   Widget _buildMenuButton(
-      BuildContext context, String titulo, List<String> opciones) {
+    BuildContext context,
+    String titulo,
+    List<String> opciones,
+  ) {
     return PopupMenuButton<String>(
       padding: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Text(titulo,
-            style: const TextStyle(fontSize: 13, color: Colors.black87)),
+        child: Text(
+          titulo,
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+        ),
       ),
       itemBuilder: (BuildContext context) {
         return opciones.map((String opcion) {
@@ -501,7 +782,7 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
           return PopupMenuItem<String>(
             value: opcion,
             child: SizedBox(
-              width: 190,
+              width: 195,
               child: Row(
                 children: [
                   Expanded(
@@ -512,8 +793,11 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                     ),
                   ),
                   if (tieneSubmenu)
-                    const Icon(Icons.chevron_right,
-                        size: 14, color: Colors.grey),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
                 ],
               ),
             ),
@@ -527,6 +811,7 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
   }
 
   void _mostrarModalInformacionPlaca(BuildContext context) {
+    final perfil = _perfilActual();
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
@@ -549,39 +834,45 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
             children: [
               Text('Modelo: $_placaSeleccionada'),
               const SizedBox(height: 6),
-              const Text('Chip: ESP32-S3 (Xtensa dual-core 32-bit LX7)'),
+              Text(
+                'Target ESP-IDF: $_targetIdfSeleccionado | Chip: ${perfil['chip'] ?? 'ESP32-S3'}',
+              ),
               const SizedBox(height: 6),
-              const Text('Frecuencia: 240 MHz | Flash: 8 MB'),
+              Text(
+                'Arquitectura: ${perfil['arquitectura'] ?? 'Xtensa 32-bit'}',
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Frecuencia: ${perfil['frecuencia_mhz'] ?? 240} MHz | Flash: ${perfil['flash_mb'] ?? 8} MB | Bootloader: ${perfil['bootloader_offset'] ?? '0x0'}',
+              ),
               const SizedBox(height: 6),
               Text('Modo Actual: $_modoOperacion'),
               const SizedBox(height: 6),
               Text('Puerto Físico: $_puertoSeleccionado'),
+              if (_macDetectada != null) ...[
+                const SizedBox(height: 6),
+                Text('MAC (esptool): $_macDetectada'),
+              ],
             ],
           ),
           actions: [
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(ctx).pop();
-                _agregarLog(
-                    'Iniciando actualización real de firmware para $_placaSeleccionada...');
-                Future.delayed(const Duration(seconds: 1), () {
-                  _agregarLog(
-                      'Firmware actualizado exitosamente en el dispositivo.');
-                });
+                _detectarPlacaYPuertoFisico(sondearEsptool: true);
               },
-              icon: const Icon(Icons.system_update, size: 14),
-              label: const Text('Actualizar firmware',
-                  style: TextStyle(fontSize: 12)),
+              icon: const Icon(Icons.usb, size: 14),
+              label: const Text(
+                'Sondear con esptool',
+                style: TextStyle(fontSize: 12),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                _agregarLog('Información de placa cerrada.');
-              },
+              onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('Regresar', style: TextStyle(fontSize: 12)),
             ),
           ],
@@ -594,53 +885,71 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
-        final List<String> placas = [
-          'ESP32-S31 Dev Module',
-          'ESP32-S31 DevKit',
-          'ESP32-S31 WROOM',
-          'Información de la placa',
-        ];
+        final nombresPlacas = _perfilesPlacas
+            .map((p) => p['nombre']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toList();
+        final opciones = [...nombresPlacas, 'Información de la placa'];
+
         return AlertDialog(
-          title: const Text('Herramientas -> Placa',
-              style: TextStyle(fontSize: 15)),
+          title: const Text(
+            'Herramientas -> Placa (Espressif ESP-IDF)',
+            style: TextStyle(fontSize: 15),
+          ),
           content: SizedBox(
-            width: 280,
+            width: 330,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: placas.length,
+              itemCount: opciones.length,
               itemBuilder: (context, index) {
-                final placa = placas[index];
-                if (placa == 'Información de la placa') {
+                final opcion = opciones[index];
+                if (opcion == 'Información de la placa') {
                   return ListTile(
-                    leading: const Icon(Icons.info_outline,
-                        color: Colors.blue, size: 20),
-                    title: Text(placa,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                            fontSize: 13)),
+                    leading: const Icon(
+                      Icons.info_outline,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                    title: Text(
+                      opcion,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 13,
+                      ),
+                    ),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       _mostrarModalInformacionPlaca(context);
                     },
                   );
                 }
+                final perfil = _perfilesPlacas[index];
+                final target = perfil['target_idf']?.toString() ?? '';
                 return ListTile(
                   leading: Radio<String>(
-                    value: placa,
+                    value: opcion,
                     groupValue: _placaSeleccionada,
                     onChanged: (val) {
                       if (val != null) {
-                        setState(() => _placaSeleccionada = val);
-                        _agregarLog('Placa seleccionada: $val');
+                        _seleccionarPlacaPorNombre(val);
+                        _agregarLog(
+                          'Placa seleccionada: $val (target ESP-IDF: $_targetIdfSeleccionado)',
+                        );
                         Navigator.of(ctx).pop();
                       }
                     },
                   ),
-                  title: Text(placa, style: const TextStyle(fontSize: 13)),
+                  title: Text(opcion, style: const TextStyle(fontSize: 13)),
+                  subtitle: Text(
+                    'idf.py set-target $target',
+                    style: const TextStyle(fontSize: 11),
+                  ),
                   onTap: () {
-                    setState(() => _placaSeleccionada = placa);
-                    _agregarLog('Placa seleccionada: $placa');
+                    _seleccionarPlacaPorNombre(opcion);
+                    _agregarLog(
+                      'Placa seleccionada: $opcion (target ESP-IDF: $_targetIdfSeleccionado)',
+                    );
                     Navigator.of(ctx).pop();
                   },
                 );
@@ -648,6 +957,13 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
             ),
           ),
           actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _detectarPlacaYPuertoFisico(sondearEsptool: true);
+              },
+              child: const Text('Autodetectar', style: TextStyle(fontSize: 12)),
+            ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('Cerrar', style: TextStyle(fontSize: 12)),
@@ -671,8 +987,10 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
           'No detectado',
         ].toSet().toList();
         return AlertDialog(
-          title: const Text('Herramientas -> Puerto',
-              style: TextStyle(fontSize: 15)),
+          title: const Text(
+            'Herramientas -> Puerto',
+            style: TextStyle(fontSize: 15),
+          ),
           content: SizedBox(
             width: 280,
             child: ListView.builder(
@@ -742,7 +1060,7 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
     setState(() {
       _codigoController.text = buffer.toString().trim();
     });
-    _agregarLog('Auto Formato aplicado al sketch.');
+    _agregarLog('Auto Formato aplicado al código fuente.');
   }
 
   void _manejarMenuAccion(BuildContext context, String titulo, String valor) {
@@ -765,6 +1083,27 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
       }
       return;
     }
+    if (titulo == 'Sketch') {
+      if (valor == 'Verificar / Compilar') {
+        _compilarConEspIdf();
+        return;
+      }
+      if (valor == 'Exportar binario') {
+        _compilarConEspIdf(mostrarRutasBinarios: true);
+        return;
+      }
+      if (valor == 'Subir') {
+        if (_puertoSeleccionado == 'No detectado' ||
+            _puertoSeleccionado == 'Buscando...') {
+          _agregarLog(
+            'ERROR: Conecte y seleccione un puerto válido antes de flashear.',
+          );
+        } else {
+          _compilarConEspIdf(mostrarRutasBinarios: true);
+        }
+        return;
+      }
+    }
     if (titulo == 'Herramientas') {
       if (valor == 'Placa') {
         _mostrarDialogoPlaca(context);
@@ -774,17 +1113,26 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
         _mostrarDialogoPuerto(context);
         return;
       }
+      if (valor == 'Detectar placa ESP32') {
+        _detectarPlacaYPuertoFisico(sondearEsptool: true);
+        return;
+      }
+      if (valor == 'Estado ESP-IDF') {
+        _verificarEstadoEspIdf();
+        return;
+      }
       if (valor == 'Auto Formato') {
         _autoFormatoCodigo();
         return;
       }
       if (valor == 'Monitor Serie') {
         _agregarLog(
-            'Monitor Serie abierto en puerto $_puertoSeleccionado (115200 baud). Realizando lectura real...');
+          'Monitor Serie preparado para $_puertoSeleccionado (115200 baud).',
+        );
         return;
       }
       if (valor == 'Recargar datos') {
-        _detectarPlacaYPuertoFisico();
+        _inicializarConexionHardware();
         return;
       }
       _agregarLog('Menú [Herramientas] -> $valor');
@@ -794,22 +1142,15 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
       switch (valor) {
         case 'Nuevo':
           setState(() {
-            _codigoController.text =
-                'void setup() {\n  // Configuración inicial\n}\n\nvoid loop() {\n  // Bucle principal\n}';
+            _codigoController.text = _plantillaEspIdfPredeterminada;
           });
-          _agregarLog('Nuevo sketch creado.');
+          _agregarLog('Nuevo proyecto C para Espressif ESP-IDF inicializado.');
           break;
         case 'Abrir':
-          _agregarLog('Abriendo sketch...');
-          Future.delayed(const Duration(milliseconds: 300), () {
-            _agregarLog('Sketch abierto correctamente.');
-          });
+          _agregarLog('Usa el módulo Archivo para abrir proyectos locales.');
           break;
         case 'Guardar':
-          _agregarLog('Guardando sketch...');
-          Future.delayed(const Duration(milliseconds: 300), () {
-            _agregarLog('Sketch guardado exitosamente en disco.');
-          });
+          _agregarLog('Proyecto sincronizado en área de trabajo.');
           break;
         case 'Salir':
           _agregarLog('Cerrando IDE...');

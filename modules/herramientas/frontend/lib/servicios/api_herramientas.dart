@@ -45,12 +45,36 @@ class ApiHerramientas {
     }
   }
 
-  /// --- Puerto Serie ---
+  /// --- Puerto Serie y Deteccion Nativa Espressif ---
 
   Future<ResultadoApi<List<Map<String, dynamic>>>> listarPuertos() async {
     return _ejecutar<List<Map<String, dynamic>>>(
       http.get(Uri.parse('$baseUrl/puertos')),
       (d) => (d['puertos'] as List).cast<Map<String, dynamic>>(),
+    );
+  }
+
+  Future<ResultadoApi<List<Map<String, dynamic>>>>
+      listarPlacasSoportadas() async {
+    return _ejecutar<List<Map<String, dynamic>>>(
+      http.get(Uri.parse('$baseUrl/placas-soportadas')),
+      (d) => (d['placas'] as List).cast<Map<String, dynamic>>(),
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> detectarPlaca({
+    String? puerto,
+    bool sondear = false,
+  }) async {
+    final params = <String, String>{
+      'sondear': sondear ? 'true' : 'false',
+      if (puerto != null && puerto.isNotEmpty) 'puerto': puerto,
+    };
+    final uri =
+        Uri.parse('$baseUrl/detectar-placa').replace(queryParameters: params);
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(uri),
+      (d) => d as Map<String, dynamic>,
     );
   }
 
@@ -123,7 +147,14 @@ class ApiHerramientas {
     );
   }
 
-  /// --- ESP-IDF ---
+  /// --- ESP-IDF (Toolchain Nativo Principal) ---
+
+  Future<ResultadoApi<Map<String, dynamic>>> estadoEspIdf() async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.get(Uri.parse('$baseUrl/esp-idf/estado')),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
 
   Future<ResultadoApi<Map<String, dynamic>>> versionEspIdf() async {
     return _ejecutar<Map<String, dynamic>>(
