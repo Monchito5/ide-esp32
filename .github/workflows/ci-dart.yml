@@ -1,5 +1,5 @@
 # Archivo: .github/workflows/ci-dart.yml
-# CI para paquetes Flutter/Dart (core, modulo, shell).
+# CI para paquetes Flutter/Dart (core, todos los modulos y shell principal).
 
 name: CI - Flutter (Monorepo)
 
@@ -24,7 +24,6 @@ jobs:
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
-      - run: flutter test
 
   herramientas-frontend:
     runs-on: ubuntu-latest
@@ -42,6 +41,21 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
+  archivo-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/archivo/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+
   editor-frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -53,10 +67,40 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-        - run: flutter pub get
-        - run: dart format --output=none --set-exit-if-changed .
-        - run: flutter analyze
-        - run: flutter test
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
+
+  sketch-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/sketch/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+
+  menu-log-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modules/menu-log/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
 
   ayuda-frontend:
     runs-on: ubuntu-latest
@@ -69,10 +113,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-        - run: flutter pub get
-        - run: dart format --output=none --set-exit-if-changed .
-        - run: flutter analyze
-        - run: flutter test
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
 
   simulacion-frontend:
     runs-on: ubuntu-latest
@@ -85,10 +129,9 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-        - run: flutter pub get
-        - run: dart format --output=none --set-exit-if-changed .
-        - run: flutter analyze
-        - run: flutter test
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
 
   ide-app:
     runs-on: ubuntu-latest

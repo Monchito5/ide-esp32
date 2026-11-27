@@ -80,5 +80,5 @@ def api_obtener_config() -> dict:
 
 @router.put("/configuracion", summary="Actualizar configuración del editor")
 def api_actualizar_config(peticion: SolicitudConfiguracion) -> dict:
-    datos = {k: v for k, v in peticion.dict().items() if v is not None}
+    datos = {k: v for k, v in peticion.model_dump().items() if v is not None}
     return actualizar_configuracion(datos)

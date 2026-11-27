@@ -1,5 +1,5 @@
 # Archivo: .github/workflows/ci-python.yml
-# CI para Python (core + modulos). Dependencias centralizadas en la raiz.
+# CI para Python (core + todos los modulos) con umbral de cobertura >= 70%.
 
 name: CI - Python (Monorepo)
 
@@ -33,16 +33,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Instalar core y modulos (editable)
+      - name: Instalar core y todos los modulos (editable)
         run: |
           pip install -e core/backend
           pip install -e modules/herramientas/backend
+          pip install -e modules/archivo/backend
           pip install -e modules/editor/backend
           pip install -e modules/sketch/backend
           pip install -e modules/simulacion/backend
-          pip install -e modules/azul/backend
+          pip install -e modules/menu-log/backend
 
-      - name: Verificar ausencia de __init__.py
+      - name: Verificar ausencia de __init__.py (PEP 420)
         run: |
           python -c "import pathlib; ign = {'venv', '.venv', '.git', 'build', 'dist', '.pytest_cache'}; matches = [p for p in pathlib.Path('.').rglob('__init__.py') if not any(i in p.parts for i in ign)]; print(matches); exit(1 if matches else 0)"
 
@@ -60,6 +61,10 @@ jobs:
         working-directory: modules/herramientas/backend
         run: pytest pruebas/ -v
 
+      - name: Pruebas modulo archivo
+        working-directory: modules/archivo/backend
+        run: pytest pruebas/ -v
+
       - name: Pruebas modulo editor
         working-directory: modules/editor/backend
         run: pytest pruebas/ -v
@@ -68,10 +73,14 @@ jobs:
         working-directory: modules/sketch/backend
         run: pytest pruebas/ -v
 
-      - name: Pruebas modulo azul
-        working-directory: modules/azul/backend
+      - name: Pruebas modulo menu-log
+        working-directory: modules/menu-log/backend
         run: pytest pruebas/ -v
 
       - name: Pruebas modulo simulacion
         working-directory: modules/simulacion/backend
         run: pytest pruebas/ -v
+
+      - name: Cobertura global backend (>= 70%)
+        run: |
+          pytest core/backend/pruebas modules/herramientas/backend/pruebas modules/archivo/backend/pruebas modules/editor/backend/pruebas modules/sketch/backend/pruebas modules/menu-log/backend/pruebas modules/simulacion/backend/pruebas --cov=ide_core --cov=herramientas_backend --cov=archivo_backend --cov=editor_backend --cov=sketch_backend --cov=menu_log_backend --cov=simulacion_backend --cov-fail-under=70

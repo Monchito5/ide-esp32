@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simulacion-backend"
+version = "1.0.0"
+description = "Modulo Simulacion para el IDE ESP32."
+requires-python = ">=3.11"
+
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["simulacion_backend*"]
+namespaces = true
+
+[tool.pytest.ini_options]
+testpaths = ["pruebas"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
