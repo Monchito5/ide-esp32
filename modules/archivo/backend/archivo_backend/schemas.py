@@ -63,6 +63,10 @@ class CompilerInputResultRequest(BaseModel):
     project_id: str = Field(
         ..., description="ID del proyecto temporal o ruta absoluta del proyecto"
     )
+    target: str = Field(
+        default="esp32",
+        description="Familia SoC objetivo ESP-IDF (esp32, esp32s2, esp32s3, esp32c3, esp32c6)",
+    )
     compilation_success: bool = Field(
         default=True, description="True si idf.py build termino con codigo 0"
     )
@@ -117,7 +121,8 @@ class BuildAndFilesDeliveryResponse(BaseModel):
 # ---------------------------------------------------------------------------
 class OpenFileRequest(BaseModel):
     filepath: str = Field(
-        ..., description="Ruta local del archivo (.ino, .cpp, .c, .h) o carpeta de proyecto a abrir"
+        ...,
+        description="Ruta local del archivo (.ino, .cpp, .c, .h) o carpeta de proyecto a abrir",
     )
 
 
