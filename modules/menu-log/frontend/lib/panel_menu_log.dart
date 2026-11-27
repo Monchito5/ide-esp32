@@ -60,10 +60,8 @@ class _PanelMenuLogState extends State<PanelMenuLog> {
       if (jobId != null) {
         final statusResponse = await http.get(endpoint('compile/$jobId'));
         if (statusResponse.statusCode == 200) {
-          final status =
-              (jsonDecode(statusResponse.body)
-                      as Map<String, dynamic>)['status']
-                  as String;
+          final status = (jsonDecode(statusResponse.body)
+              as Map<String, dynamic>)['status'] as String;
           if (mounted) {
             setState(() {
               jobStatus = status;

@@ -96,80 +96,107 @@ class _VistaEditorState extends State<VistaEditor> {
                       MenuEditWidget(
                         editorState: state,
                         onGoToLineRequested: _abrirDialogoIrALinea,
-                        onReplaceInFilesRequested: _abrirDialogoReemplazarArchivos,
+                        onReplaceInFilesRequested:
+                            _abrirDialogoReemplazarArchivos,
                       ),
-                      const VerticalDivider(width: 12, indent: 6, endIndent: 6, color: Colors.white24),
+                      const VerticalDivider(
+                          width: 12,
+                          indent: 6,
+                          endIndent: 6,
+                          color: Colors.white24),
                       // Botones rápidos con tooltips y atajos
                       IconButton(
-                        icon: const Icon(Icons.undo, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.undo,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Deshacer (Ctrl+Z)',
                         onPressed: em.canUndo() ? em.undo : null,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.redo, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.redo,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Rehacer (Ctrl+Y)',
                         onPressed: em.canRedo() ? em.redo : null,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.content_cut, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.content_cut,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Cortar (Ctrl+X)',
                         onPressed: em.cut,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.content_copy, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.content_copy,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Copiar (Ctrl+C)',
                         onPressed: em.copy,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.content_paste, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.content_paste,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Pegar (Ctrl+V)',
                         onPressed: em.paste,
                       ),
-                      const VerticalDivider(width: 12, indent: 6, endIndent: 6, color: Colors.white24),
+                      const VerticalDivider(
+                          width: 12,
+                          indent: 6,
+                          endIndent: 6,
+                          color: Colors.white24),
                       IconButton(
-                        icon: const Icon(Icons.comment, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.comment,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Comentar / Descomentar (Ctrl+/)',
                         onPressed: em.toggleComment,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.format_indent_increase, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.format_indent_increase,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Aumentar sangría (Ctrl+])',
                         onPressed: em.increaseIndent,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.format_indent_decrease, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.format_indent_decrease,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Disminuir sangría (Ctrl+[)',
                         onPressed: em.decreaseIndent,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.format_align_left, size: 16, color: Colors.greenAccent),
+                        icon: const Icon(Icons.format_align_left,
+                            size: 16, color: Colors.greenAccent),
                         tooltip: 'Formato automático (Shift+Alt+F)',
                         onPressed: em.autoFormatLocal,
                       ),
-                      const VerticalDivider(width: 12, indent: 6, endIndent: 6, color: Colors.white24),
+                      const VerticalDivider(
+                          width: 12,
+                          indent: 6,
+                          endIndent: 6,
+                          color: Colors.white24),
                       IconButton(
-                        icon: const Icon(Icons.search, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.search,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Buscar / Reemplazar (Ctrl+F)',
                         onPressed: () => sm.setBarraVisible(!sm.barraVisible),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.arrow_forward, size: 16, color: Colors.white70),
+                        icon: const Icon(Icons.arrow_forward,
+                            size: 16, color: Colors.white70),
                         tooltip: 'Ir a línea... (Ctrl+G)',
                         onPressed: _abrirDialogoIrALinea,
                       ),
                       const Spacer(),
                       // Control visual de tamaño de fuente
                       IconButton(
-                        icon: const Icon(Icons.remove, size: 14, color: Colors.white70),
+                        icon: const Icon(Icons.remove,
+                            size: 14, color: Colors.white70),
                         tooltip: 'Reducir tamaño de fuente (Ctrl+-)',
                         onPressed: state.decreaseFontSize,
                       ),
                       Text(
                         '${state.tamanioFuente.toInt()} pt',
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white70),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.add, size: 14, color: Colors.white70),
+                        icon: const Icon(Icons.add,
+                            size: 14, color: Colors.white70),
                         tooltip: 'Aumentar tamaño de fuente (Ctrl++)',
                         onPressed: state.increaseFontSize,
                       ),
@@ -178,7 +205,8 @@ class _VistaEditorState extends State<VistaEditor> {
                   ),
                 ),
 
-                const Divider(height: 1, thickness: 1, color: Color(0xFF333333)),
+                const Divider(
+                    height: 1, thickness: 1, color: Color(0xFF333333)),
 
                 // Área de edición con barra de números de línea sincronizada
                 Expanded(
@@ -198,7 +226,8 @@ class _VistaEditorState extends State<VistaEditor> {
                               itemCount: totalLineas,
                               itemBuilder: (context, index) {
                                 final int numLinea = index + 1;
-                                final bool esLineaActiva = numLinea == state.lineaActual;
+                                final bool esLineaActiva =
+                                    numLinea == state.lineaActual;
 
                                 return Container(
                                   height: state.tamanioFuente * 1.5,
@@ -222,13 +251,15 @@ class _VistaEditorState extends State<VistaEditor> {
                             ),
                           ),
 
-                          const VerticalDivider(width: 1, thickness: 1, color: Color(0xFF333333)),
+                          const VerticalDivider(
+                              width: 1, thickness: 1, color: Color(0xFF333333)),
 
                           // Editor de texto enriquecido con resaltado de sintaxis
                           Expanded(
                             child: SingleChildScrollView(
                               controller: _scrollControllerTexto,
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
                               child: TextField(
                                 controller: state.controller,
                                 maxLines: null,
@@ -261,7 +292,8 @@ class _VistaEditorState extends State<VistaEditor> {
                   ),
                 ),
 
-                const Divider(height: 1, thickness: 1, color: Color(0xFF333333)),
+                const Divider(
+                    height: 1, thickness: 1, color: Color(0xFF333333)),
 
                 // Barra inferior de estado del editor
                 Container(
@@ -272,22 +304,26 @@ class _VistaEditorState extends State<VistaEditor> {
                     children: [
                       Text(
                         'Ln ${state.lineaActual}, Col ${state.columnaActual}',
-                        style: const TextStyle(fontSize: 11, color: Colors.white),
+                        style:
+                            const TextStyle(fontSize: 11, color: Colors.white),
                       ),
                       const SizedBox(width: 12),
                       Text(
                         '${state.totalCaracteres} caracteres',
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white70),
                       ),
                       const SizedBox(width: 12),
                       Text(
                         'Espacios: ${em.tamanoTabulacion}',
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white70),
                       ),
                       const Spacer(),
                       Text(
                         'Zoom: ${(state.tamanioFuente / 14.0 * 100).toInt()}%',
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white70),
                       ),
                       const SizedBox(width: 12),
                       const Text(

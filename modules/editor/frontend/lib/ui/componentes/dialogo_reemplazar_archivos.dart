@@ -78,7 +78,8 @@ class _DialogoReemplazarArchivosState extends State<DialogoReemplazarArchivos> {
         final tot = res['total_reemplazos'] ?? 0;
         _mensajeResultado = 'Éxito: $tot reemplazos en $mod archivo(s).';
       } else {
-        _mensajeResultado = 'Error: ${res['error'] ?? 'No se pudo completar el reemplazo.'}';
+        _mensajeResultado =
+            'Error: ${res['error'] ?? 'No se pudo completar el reemplazo.'}';
       }
     });
   }

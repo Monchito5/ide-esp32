@@ -55,9 +55,9 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
       setState(() {
         _archivosProyecto = items is List
             ? items
-                  .whereType<Map>()
-                  .map((item) => Map<String, dynamic>.from(item))
-                  .toList()
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList()
             : [];
         _cargandoArchivos = false;
       });
@@ -147,9 +147,8 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
       setState(() {
         _estado = estado;
         _error = respuesta['error']?.toString();
-        _resultado = resultado is Map
-            ? Map<String, dynamic>.from(resultado)
-            : null;
+        _resultado =
+            resultado is Map ? Map<String, dynamic>.from(resultado) : null;
       });
 
       if (estado == 'completed' || estado == 'failed') {
@@ -226,8 +225,8 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
     final color = _colorEstado();
     final archivosBinarios = _resultado?['bin_files'] is List
         ? (_resultado!['bin_files'] as List)
-              .map((archivo) => archivo.toString())
-              .toList()
+            .map((archivo) => archivo.toString())
+            .toList()
         : <String>[];
 
     return SingleChildScrollView(
@@ -254,7 +253,6 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 28),
-
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -292,9 +290,7 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -309,9 +305,8 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: _cargandoArchivos
-                              ? null
-                              : _explorarArchivos,
+                          onPressed:
+                              _cargandoArchivos ? null : _explorarArchivos,
                           icon: _cargandoArchivos
                               ? const SizedBox(
                                   width: 18,
@@ -375,7 +370,6 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                   ),
                 ),
               ),
-
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -393,10 +387,10 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                             _ocupado
                                 ? Icons.sync
                                 : _estado == 'completed'
-                                ? Icons.check_circle
-                                : _estado == 'failed'
-                                ? Icons.error
-                                : Icons.info_outline,
+                                    ? Icons.check_circle
+                                    : _estado == 'failed'
+                                        ? Icons.error
+                                        : Icons.info_outline,
                             color: color,
                           ),
                           const SizedBox(width: 10),
@@ -437,7 +431,6 @@ class _VistaPrincipalState extends State<VistaPrincipal> {
                   ),
                 ),
               ),
-
               if (_resultado != null) ...[
                 if (archivosBinarios.isNotEmpty) ...[
                   const SizedBox(height: 20),

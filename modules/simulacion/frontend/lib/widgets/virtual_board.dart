@@ -14,9 +14,8 @@ class VirtualBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = estado == 'iniciada'
-        ? Colors.green.shade400
-        : Colors.grey.shade400;
+    final colorEstado =
+        estado == 'iniciada' ? Colors.green.shade400 : Colors.grey.shade400;
 
     return Card(
       elevation: 4,

@@ -62,7 +62,10 @@ class EditManager {
   }
 
   // --- REQ-001: Undo ---
-  bool canUndo() => _historialUndo.length > 1;
+  bool canUndo() =>
+      _historialUndo.length > 1 ||
+      (_historialUndo.isNotEmpty &&
+          _historialUndo.last.texto != controller.text);
 
   void undo() {
     if (!canUndo()) return;
@@ -74,7 +77,10 @@ class EditManager {
       seleccion: controller.selection,
     ));
 
-    _historialUndo.removeLast(); // Quitar estado actual
+    if (_historialUndo.last.texto == controller.text &&
+        _historialUndo.length > 1) {
+      _historialUndo.removeLast();
+    }
     final SnapshotEdicion anterior = _historialUndo.last;
 
     controller.value = TextEditingValue(
@@ -227,7 +233,8 @@ class EditManager {
     // Verificar si todas las líneas seleccionadas ya están comentadas con //
     bool todasComentadas = true;
     for (int i = inicioLineaIndex; i <= finLineaIndex; i++) {
-      if (lineas[i].trim().isNotEmpty && !lineas[i].trimLeft().startsWith('//')) {
+      if (lineas[i].trim().isNotEmpty &&
+          !lineas[i].trimLeft().startsWith('//')) {
         todasComentadas = false;
         break;
       }
@@ -252,7 +259,8 @@ class EditManager {
     }
 
     controller.text = lineas.join('\n');
-    controller.selection = TextSelection.collapsed(offset: min(start, controller.text.length));
+    controller.selection =
+        TextSelection.collapsed(offset: min(start, controller.text.length));
   }
 
   // --- REQ-011: Increase Indent ---
@@ -266,16 +274,33 @@ class EditManager {
     final int end = max(seleccion.start, seleccion.end);
 
     int acumulado = 0;
+    int deltaTotal = 0;
+    int deltaInicio = 0;
+    bool primeraTocada = false;
     for (int i = 0; i < lineas.length; i++) {
       final int finLinea = acumulado + lineas[i].length;
       if (finLinea >= start && acumulado <= end) {
         lineas[i] = '$unit${lineas[i]}';
+        deltaTotal += unit.length;
+        if (!primeraTocada) {
+          deltaInicio = unit.length;
+          primeraTocada = true;
+        }
       }
       acumulado = finLinea + 1;
     }
 
-    controller.text = lineas.join('\n');
-    controller.selection = TextSelection.collapsed(offset: min(start + unit.length, controller.text.length));
+    final nuevoTexto = lineas.join('\n');
+    controller.text = nuevoTexto;
+    if (start == end) {
+      controller.selection = TextSelection.collapsed(
+          offset: min(start + deltaInicio, nuevoTexto.length));
+    } else {
+      controller.selection = TextSelection(
+        baseOffset: min(start, nuevoTexto.length),
+        extentOffset: min(end + deltaTotal, nuevoTexto.length),
+      );
+    }
   }
 
   // --- REQ-012: Decrease Indent ---
@@ -289,20 +314,39 @@ class EditManager {
     final int end = max(seleccion.start, seleccion.end);
 
     int acumulado = 0;
+    int removidosTotal = 0;
+    int removidosInicio = 0;
+    bool primeraTocada = false;
     for (int i = 0; i < lineas.length; i++) {
       final int finLinea = acumulado + lineas[i].length;
       if (finLinea >= start && acumulado <= end) {
+        final antesLen = lineas[i].length;
         if (lineas[i].startsWith(unit)) {
           lineas[i] = lineas[i].substring(unit.length);
         } else if (lineas[i].startsWith(' ')) {
           lineas[i] = lineas[i].replaceFirst(RegExp(r'^\s+'), '');
         }
+        final diff = antesLen - lineas[i].length;
+        removidosTotal += diff;
+        if (!primeraTocada) {
+          removidosInicio = diff;
+          primeraTocada = true;
+        }
       }
       acumulado = finLinea + 1;
     }
 
-    controller.text = lineas.join('\n');
-    controller.selection = TextSelection.collapsed(offset: max(0, start - unit.length));
+    final nuevoTexto = lineas.join('\n');
+    controller.text = nuevoTexto;
+    if (start == end) {
+      controller.selection =
+          TextSelection.collapsed(offset: max(0, start - removidosInicio));
+    } else {
+      controller.selection = TextSelection(
+        baseOffset: max(0, min(start, nuevoTexto.length)),
+        extentOffset: max(0, min(end - removidosTotal, nuevoTexto.length)),
+      );
+    }
   }
 
   // --- REQ-013: Auto Format local ---

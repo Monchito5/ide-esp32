@@ -1,5 +1,6 @@
 // Archivo: modules/editor/frontend/test/modulo_test.dart
 import 'package:editor_ui/editor_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -18,7 +19,8 @@ void main() {
     late EditManager editManager;
 
     setUp(() {
-      controller = CppSyntaxHighlighterController(text: 'int led = 2;\nvoid setup() {}');
+      controller =
+          CppSyntaxHighlighterController(text: 'int led = 2;\nvoid setup() {}');
       editManager = EditManager(controller: controller);
     });
 
@@ -44,7 +46,8 @@ void main() {
 
     test('TC-009, TC-010 / REQ-010: Comment y Uncomment alternan //', () {
       controller.text = 'digitalWrite(LED, HIGH);';
-      controller.selection = const TextSelection(baseOffset: 0, extentOffset: 24);
+      controller.selection =
+          const TextSelection(baseOffset: 0, extentOffset: 24);
 
       // Comentar
       editManager.toggleComment();
@@ -57,7 +60,8 @@ void main() {
 
     test('TC-011, TC-012 / REQ-011, REQ-012: Increase y Decrease Indent', () {
       controller.text = 'linea1\nlinea2';
-      controller.selection = const TextSelection(baseOffset: 0, extentOffset: 12);
+      controller.selection =
+          const TextSelection(baseOffset: 0, extentOffset: 12);
 
       // Aumentar sangría (+2 espacios)
       editManager.increaseIndent();
@@ -89,7 +93,8 @@ void main() {
     late SearchManager searchManager;
 
     setUp(() {
-      controller = CppSyntaxHighlighterController(text: 'Serial.print("hola"); Serial.println("hola");');
+      controller = CppSyntaxHighlighterController(
+          text: 'Serial.print("hola"); Serial.println("hola");');
       searchManager = SearchManager(controller: controller);
     });
 
@@ -99,7 +104,9 @@ void main() {
       expect(searchManager.indiceActual, 0);
     });
 
-    test('TC-015, TC-016 / REQ-014, REQ-015: Find Next y Find Previous circulan', () {
+    test(
+        'TC-015, TC-016 / REQ-014, REQ-015: Find Next y Find Previous circulan',
+        () {
       searchManager.buscar('Serial');
       expect(searchManager.indiceActual, 0);
 
@@ -116,13 +123,17 @@ void main() {
     test('Reemplazo simple y Reemplazo total', () {
       searchManager.buscar('Serial');
       searchManager.replaceAll('MiSerial');
-      expect(controller.text.contains('MiSerial'), isTrue);
-      expect(controller.text.contains('Serial.'), isFalse);
+      expect(
+        controller.text,
+        'MiSerial.print("hola"); MiSerial.println("hola");',
+      );
+      expect(RegExp(r'\bSerial\.').hasMatch(controller.text), isFalse);
     });
   });
 
   group('EditorState - Control de Fuente y Zoom', () {
-    test('TC-019, TC-020 / REQ-018, REQ-019: Ajuste visual de tamaño de fuente', () {
+    test('TC-019, TC-020 / REQ-018, REQ-019: Ajuste visual de tamaño de fuente',
+        () {
       final state = EditorState();
       final double inicial = state.tamanioFuente;
 

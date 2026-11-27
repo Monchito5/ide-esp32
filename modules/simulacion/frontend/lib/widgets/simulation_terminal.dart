@@ -71,9 +71,8 @@ class _SimulationTerminalState extends State<SimulationTerminal> {
                     child: Text(
                       _lineas[i],
                       style: TextStyle(
-                        color: esComando
-                            ? Colors.cyan
-                            : const Color(0xFF8DC63F),
+                        color:
+                            esComando ? Colors.cyan : const Color(0xFF8DC63F),
                         fontFamily: 'monospace',
                         fontSize: 11,
                       ),

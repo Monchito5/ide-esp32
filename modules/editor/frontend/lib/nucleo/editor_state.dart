@@ -13,19 +13,19 @@ class EditorState extends ChangeNotifier {
     controller = CppSyntaxHighlighterController(
       text: codigoInicial ??
           '// IDE ESP32 - Sketch\n'
-          '#include <Arduino.h>\n\n'
-          'const int LED_PIN = 2;\n\n'
-          'void setup() {\n'
-          '  Serial.begin(115200);\n'
-          '  pinMode(LED_PIN, OUTPUT);\n'
-          '  Serial.println("ESP32-S3 Iniciado correctamente.");\n'
-          '}\n\n'
-          'void loop() {\n'
-          '  digitalWrite(LED_PIN, HIGH);\n'
-          '  delay(500);\n'
-          '  digitalWrite(LED_PIN, LOW);\n'
-          '  delay(500);\n'
-          '}\n',
+              '#include <Arduino.h>\n\n'
+              'const int LED_PIN = 2;\n\n'
+              'void setup() {\n'
+              '  Serial.begin(115200);\n'
+              '  pinMode(LED_PIN, OUTPUT);\n'
+              '  Serial.println("ESP32-S3 Iniciado correctamente.");\n'
+              '}\n\n'
+              'void loop() {\n'
+              '  digitalWrite(LED_PIN, HIGH);\n'
+              '  delay(500);\n'
+              '  digitalWrite(LED_PIN, LOW);\n'
+              '  delay(500);\n'
+              '}\n',
     );
 
     editManager = EditManager(controller: controller);

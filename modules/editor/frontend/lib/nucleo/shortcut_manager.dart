@@ -98,8 +98,8 @@ class EditorShortcutWrapper extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.keyY, control: true):
             const RehacerIntent(),
         // Ctrl+Shift+Z: Redo alternativo
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true):
-            const RehacerIntent(),
+        const SingleActivator(LogicalKeyboardKey.keyZ,
+            control: true, shift: true): const RehacerIntent(),
         // Ctrl+X: Cut
         const SingleActivator(LogicalKeyboardKey.keyX, control: true):
             const CortarIntent(),
@@ -145,22 +145,36 @@ class EditorShortcutWrapper extends StatelessWidget {
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
-          DeshacerIntent: CallbackAction<DeshacerIntent>(onInvoke: (_) => em.undo()),
-          RehacerIntent: CallbackAction<RehacerIntent>(onInvoke: (_) => em.redo()),
+          DeshacerIntent:
+              CallbackAction<DeshacerIntent>(onInvoke: (_) => em.undo()),
+          RehacerIntent:
+              CallbackAction<RehacerIntent>(onInvoke: (_) => em.redo()),
           CortarIntent: CallbackAction<CortarIntent>(onInvoke: (_) => em.cut()),
-          CopiarIntent: CallbackAction<CopiarIntent>(onInvoke: (_) => em.copy()),
+          CopiarIntent:
+              CallbackAction<CopiarIntent>(onInvoke: (_) => em.copy()),
           PegarIntent: CallbackAction<PegarIntent>(onInvoke: (_) => em.paste()),
-          SeleccionarTodoIntent: CallbackAction<SeleccionarTodoIntent>(onInvoke: (_) => em.selectAll()),
-          BuscarIntent: CallbackAction<BuscarIntent>(onInvoke: (_) => sm.useSelectionForFind()),
-          BuscarSiguienteIntent: CallbackAction<BuscarSiguienteIntent>(onInvoke: (_) => sm.findNext()),
-          BuscarAnteriorIntent: CallbackAction<BuscarAnteriorIntent>(onInvoke: (_) => sm.findPrevious()),
-          IrALineaIntent: CallbackAction<IrALineaIntent>(onInvoke: (_) => onGoToLineRequested()),
-          ComentarIntent: CallbackAction<ComentarIntent>(onInvoke: (_) => em.toggleComment()),
-          AumentarSangriaIntent: CallbackAction<AumentarSangriaIntent>(onInvoke: (_) => em.increaseIndent()),
-          DisminuirSangriaIntent: CallbackAction<DisminuirSangriaIntent>(onInvoke: (_) => em.decreaseIndent()),
-          FormatearIntent: CallbackAction<FormatearIntent>(onInvoke: (_) => em.autoFormatLocal()),
-          AumentarFuenteIntent: CallbackAction<AumentarFuenteIntent>(onInvoke: (_) => editorState.increaseFontSize()),
-          DisminuirFuenteIntent: CallbackAction<DisminuirFuenteIntent>(onInvoke: (_) => editorState.decreaseFontSize()),
+          SeleccionarTodoIntent: CallbackAction<SeleccionarTodoIntent>(
+              onInvoke: (_) => em.selectAll()),
+          BuscarIntent: CallbackAction<BuscarIntent>(
+              onInvoke: (_) => sm.useSelectionForFind()),
+          BuscarSiguienteIntent: CallbackAction<BuscarSiguienteIntent>(
+              onInvoke: (_) => sm.findNext()),
+          BuscarAnteriorIntent: CallbackAction<BuscarAnteriorIntent>(
+              onInvoke: (_) => sm.findPrevious()),
+          IrALineaIntent: CallbackAction<IrALineaIntent>(
+              onInvoke: (_) => onGoToLineRequested()),
+          ComentarIntent: CallbackAction<ComentarIntent>(
+              onInvoke: (_) => em.toggleComment()),
+          AumentarSangriaIntent: CallbackAction<AumentarSangriaIntent>(
+              onInvoke: (_) => em.increaseIndent()),
+          DisminuirSangriaIntent: CallbackAction<DisminuirSangriaIntent>(
+              onInvoke: (_) => em.decreaseIndent()),
+          FormatearIntent: CallbackAction<FormatearIntent>(
+              onInvoke: (_) => em.autoFormatLocal()),
+          AumentarFuenteIntent: CallbackAction<AumentarFuenteIntent>(
+              onInvoke: (_) => editorState.increaseFontSize()),
+          DisminuirFuenteIntent: CallbackAction<DisminuirFuenteIntent>(
+              onInvoke: (_) => editorState.decreaseFontSize()),
         },
         child: child,
       ),

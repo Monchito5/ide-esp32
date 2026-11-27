@@ -57,7 +57,8 @@ class MenuEditWidget extends StatelessWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Código copiado en formato Markdown para foro.'),
+                  content:
+                      Text('Código copiado en formato Markdown para foro.'),
                   duration: Duration(seconds: 2),
                 ),
               );
@@ -110,23 +111,32 @@ class MenuEditWidget extends StatelessWidget {
         _item('copyForForum', 'Copiar para foro (Markdown)', '', Icons.forum),
         const PopupMenuDivider(),
         _item('comment', 'Comentar / Descomentar', 'Ctrl+/', Icons.comment),
-        _item('increaseIndent', 'Aumentar sangría', 'Ctrl+]', Icons.format_indent_increase),
-        _item('decreaseIndent', 'Disminuir sangría', 'Ctrl+[', Icons.format_indent_decrease),
-        _item('autoFormat', 'Formato automático (Auto Format)', 'Shift+Alt+F', Icons.format_align_left),
+        _item('increaseIndent', 'Aumentar sangría', 'Ctrl+]',
+            Icons.format_indent_increase),
+        _item('decreaseIndent', 'Disminuir sangría', 'Ctrl+[',
+            Icons.format_indent_decrease),
+        _item('autoFormat', 'Formato automático (Auto Format)', 'Shift+Alt+F',
+            Icons.format_align_left),
         const PopupMenuDivider(),
         _item('find', 'Buscar (Find)', 'Ctrl+F', Icons.search),
         _item('findNext', 'Buscar siguiente', 'F3', Icons.arrow_downward),
-        _item('findPrevious', 'Buscar anterior', 'Shift+F3', Icons.arrow_upward),
-        _item('useSelectionForFind', 'Usar selección para buscar', 'Ctrl+E', Icons.find_in_page),
-        _item('replaceInFiles', 'Reemplazar en archivos...', 'Ctrl+Shift+F', Icons.find_replace),
+        _item(
+            'findPrevious', 'Buscar anterior', 'Shift+F3', Icons.arrow_upward),
+        _item('useSelectionForFind', 'Usar selección para buscar', 'Ctrl+E',
+            Icons.find_in_page),
+        _item('replaceInFiles', 'Reemplazar en archivos...', 'Ctrl+Shift+F',
+            Icons.find_replace),
         const PopupMenuDivider(),
-        _item('increaseFontSize', 'Aumentar tamaño de fuente', 'Ctrl++', Icons.zoom_in),
-        _item('decreaseFontSize', 'Disminuir tamaño de fuente', 'Ctrl+-', Icons.zoom_out),
+        _item('increaseFontSize', 'Aumentar tamaño de fuente', 'Ctrl++',
+            Icons.zoom_in),
+        _item('decreaseFontSize', 'Disminuir tamaño de fuente', 'Ctrl+-',
+            Icons.zoom_out),
       ],
     );
   }
 
-  PopupMenuItem<String> _item(String valor, String titulo, String atajo, IconData icono) {
+  PopupMenuItem<String> _item(
+      String valor, String titulo, String atajo, IconData icono) {
     return PopupMenuItem<String>(
       value: valor,
       height: 32,

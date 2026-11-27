@@ -45,6 +45,7 @@ class _VirtualComponentsState extends State<VirtualComponents> {
       'tipo': _tipoSeleccionado,
       'puerto': _puertoSeleccionado,
     });
+    if (!mounted) return;
     if (r.ok) {
       _cargarComponentes();
     } else {
@@ -69,6 +70,7 @@ class _VirtualComponentsState extends State<VirtualComponents> {
               'Componentes Virtuales',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
+            if (_cargando) const LinearProgressIndicator(),
             const SizedBox(height: 8),
             Row(
               children: [

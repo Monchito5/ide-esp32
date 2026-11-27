@@ -11,14 +11,18 @@ class ResultadoApi<T> {
   final T? data;
   final String? error;
 
-  ResultadoApi.ok(this.data) : ok = true, error = null;
-  ResultadoApi.error(this.error) : ok = false, data = null;
+  ResultadoApi.ok(this.data)
+      : ok = true,
+        error = null;
+  ResultadoApi.error(this.error)
+      : ok = false,
+        data = null;
 }
 
 /// Cliente HTTP para las rutas del modulo Simulacion.
 class ApiSimulacion {
   ApiSimulacion({String? baseUrl})
-    : baseUrl = baseUrl ?? 'http://127.0.0.1:8765/api/v1/simulacion';
+      : baseUrl = baseUrl ?? 'http://127.0.0.1:8765/api/v1/simulacion';
 
   final String baseUrl;
 

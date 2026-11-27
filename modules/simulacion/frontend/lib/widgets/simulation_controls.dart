@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 
 import '../api_simulacion.dart';
-import '../services/simulation_api.dart';
 
 /// Controles de simulacion: iniciar, detener, reiniciar, flashear.
 class SimulationControls extends StatefulWidget {
@@ -20,7 +19,6 @@ class SimulationControls extends StatefulWidget {
 }
 
 class _SimulationControlsState extends State<SimulationControls> {
-  final SimulationService _service = SimulationService();
   Map<String, dynamic> _estado = {};
   bool _cargando = false;
 
@@ -43,6 +41,7 @@ class _SimulationControlsState extends State<SimulationControls> {
   ) async {
     setState(() => _cargando = true);
     final r = await future;
+    if (!mounted) return;
     setState(() => _cargando = false);
     if (!r.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,6 +70,7 @@ class _SimulationControlsState extends State<SimulationControls> {
               'Controles de Simulacion',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
+            if (_cargando) const LinearProgressIndicator(),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -109,9 +109,9 @@ class _SimulationControlsState extends State<SimulationControls> {
                     onPressed: estaActiva
                         ? null
                         : () => _ejecutarAccion(
-                            'iniciar',
-                            widget.api.iniciarSesion(widget.sesionId),
-                          ),
+                              'iniciar',
+                              widget.api.iniciarSesion(widget.sesionId),
+                            ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -122,9 +122,9 @@ class _SimulationControlsState extends State<SimulationControls> {
                     onPressed: !estaActiva
                         ? null
                         : () => _ejecutarAccion(
-                            'detener',
-                            widget.api.detenerSesion(widget.sesionId),
-                          ),
+                              'detener',
+                              widget.api.detenerSesion(widget.sesionId),
+                            ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -135,9 +135,9 @@ class _SimulationControlsState extends State<SimulationControls> {
                     onPressed: !estaActiva
                         ? null
                         : () => _ejecutarAccion(
-                            'reiniciar',
-                            widget.api.reiniciarSesion(widget.sesionId),
-                          ),
+                              'reiniciar',
+                              widget.api.reiniciarSesion(widget.sesionId),
+                            ),
                   ),
                 ),
               ],
@@ -149,9 +149,8 @@ class _SimulationControlsState extends State<SimulationControls> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.file_upload),
                     label: const Text('Flashear'),
-                    onPressed: !estaActiva
-                        ? null
-                        : () => _mostrarDialogoFlashear(),
+                    onPressed:
+                        !estaActiva ? null : () => _mostrarDialogoFlashear(),
                   ),
                 ),
               ],
@@ -173,9 +172,10 @@ class _SimulationControlsState extends State<SimulationControls> {
     String archivo = '';
     String direccion = '0x10000';
 
+    final messenger = ScaffoldMessenger.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Flashear Firmware'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -194,18 +194,19 @@ class _SimulationControlsState extends State<SimulationControls> {
         actions: [
           TextButton(
             child: const Text('Cancelar'),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogCtx).pop(),
           ),
           ElevatedButton(
             child: const Text('Flashear'),
             onPressed: () async {
-              Navigator.of(context).pop();
+              Navigator.of(dialogCtx).pop();
               final r = await widget.api.flashearSesion(widget.sesionId, {
                 'archivo': archivo,
                 'direccion': direccion,
               });
+              if (!mounted) return;
               if (!r.ok) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(
                     content: Text('Error: ${r.error}'),
                     backgroundColor: Colors.red,

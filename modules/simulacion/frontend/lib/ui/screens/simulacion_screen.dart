@@ -2,11 +2,9 @@
 import 'package:flutter/material.dart';
 
 import '../../api_simulacion.dart';
-import '../../services/simulation_api.dart';
 import '../../widgets/simulation_controls.dart';
 import '../../widgets/simulation_terminal.dart';
 import '../../widgets/virtual_components.dart';
-import '../../widgets/virtual_board.dart';
 
 /// Pantalla principal del modulo Simulacion.
 /// Permite crear, administrar y monitorear sesiones de simulacion ESP32.
@@ -20,7 +18,6 @@ class SimulacionScreen extends StatefulWidget {
 }
 
 class _SimulacionScreenState extends State<SimulacionScreen> {
-  final SimulationService _service = SimulationService();
   List<Map<String, dynamic>> _sesiones = [];
   String? _sesionSeleccionada;
   bool _cargando = false;
@@ -105,7 +102,7 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
                 'chip': chipSeleccionado,
                 'motor': motorSeleccionado,
                 'nombre': nombreSesion.isEmpty
-                    ? 'Sesion ${chipSeleccionado}'
+                    ? 'Sesion $chipSeleccionado'
                     : nombreSesion,
               });
               if (r.ok) {
@@ -212,98 +209,98 @@ class _SimulacionScreenState extends State<SimulacionScreen> {
             child: _cargando
                 ? const Center(child: CircularProgressIndicator())
                 : _sesiones.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.device_unknown,
-                          size: 64,
-                          color: Colors.grey,
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.device_unknown,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No hay sesiones de simulacion',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: const Text('Crear Primera Sesion'),
+                              onPressed: _crearSesion,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No hay sesiones de simulacion',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.add),
-                          label: const Text('Crear Primera Sesion'),
-                          onPressed: _crearSesion,
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _sesiones.length,
-                    itemBuilder: (context, i) {
-                      final s = _sesiones[i];
-                      final esSeleccionada =
-                          _sesionSeleccionada == s['sesion_id'];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        child: ListTile(
-                          leading: Icon(
-                            s['estado'] == 'iniciada'
-                                ? Icons.play_circle
-                                : Icons.stop_circle,
-                            color: s['estado'] == 'iniciada'
-                                ? Colors.green
-                                : Colors.grey,
-                          ),
-                          title: Text(s['nombre'] ?? 'Sesion'),
-                          subtitle: Text(
-                            '${s['chip']} • ${s['motor']} • ${s['estado']}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (s['estado'] != 'iniciada')
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.play_arrow,
-                                    color: Colors.green,
-                                  ),
-                                  onPressed: () =>
-                                      _iniciarSesion(s['sesion_id']),
-                                ),
-                              if (s['estado'] == 'iniciada') ...[
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.stop,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () =>
-                                      _detenerSesion(s['sesion_id']),
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.restart_alt,
-                                    color: Colors.orange,
-                                  ),
-                                  onPressed: () =>
-                                      _reiniciarSesion(s['sesion_id']),
-                                ),
-                              ],
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () =>
-                                    _eliminarSesion(s['sesion_id']),
+                      )
+                    : ListView.builder(
+                        itemCount: _sesiones.length,
+                        itemBuilder: (context, i) {
+                          final s = _sesiones[i];
+                          final esSeleccionada =
+                              _sesionSeleccionada == s['sesion_id'];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: ListTile(
+                              leading: Icon(
+                                s['estado'] == 'iniciada'
+                                    ? Icons.play_circle
+                                    : Icons.stop_circle,
+                                color: s['estado'] == 'iniciada'
+                                    ? Colors.green
+                                    : Colors.grey,
                               ),
-                            ],
-                          ),
-                          onTap: () => setState(
-                            () => _sesionSeleccionada = s['sesion_id'],
-                          ),
-                          selected: esSeleccionada,
-                        ),
-                      );
-                    },
-                  ),
+                              title: Text(s['nombre'] ?? 'Sesion'),
+                              subtitle: Text(
+                                '${s['chip']} • ${s['motor']} • ${s['estado']}',
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (s['estado'] != 'iniciada')
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.play_arrow,
+                                        color: Colors.green,
+                                      ),
+                                      onPressed: () =>
+                                          _iniciarSesion(s['sesion_id']),
+                                    ),
+                                  if (s['estado'] == 'iniciada') ...[
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.stop,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () =>
+                                          _detenerSesion(s['sesion_id']),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.restart_alt,
+                                        color: Colors.orange,
+                                      ),
+                                      onPressed: () =>
+                                          _reiniciarSesion(s['sesion_id']),
+                                    ),
+                                  ],
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () =>
+                                        _eliminarSesion(s['sesion_id']),
+                                  ),
+                                ],
+                              ),
+                              onTap: () => setState(
+                                () => _sesionSeleccionada = s['sesion_id'],
+                              ),
+                              selected: esSeleccionada,
+                            ),
+                          );
+                        },
+                      ),
           ),
           if (_sesionSeleccionada != null)
             Padding(

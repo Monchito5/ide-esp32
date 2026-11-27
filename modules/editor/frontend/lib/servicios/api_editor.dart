@@ -12,8 +12,8 @@ class ApiEditor {
   final http.Client _cliente;
 
   /// Formatea codigo C/C++/Arduino mediante el backend.
-  Future<Map<String, dynamic>> formatearCodigo(
-      String codigo, {int tabSize = 2}) async {
+  Future<Map<String, dynamic>> formatearCodigo(String codigo,
+      {int tabSize = 2}) async {
     try {
       final respuesta = await _cliente.post(
         Uri.parse('$urlBase/formato'),

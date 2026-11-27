@@ -93,10 +93,12 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                     decoration: InputDecoration(
                       hintText: 'Buscar (Find)...',
-                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+                      hintStyle:
+                          const TextStyle(color: Colors.white38, fontSize: 12),
                       filled: true,
                       fillColor: const Color(0xFF3C3C3C),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(3),
                         borderSide: BorderSide.none,
@@ -127,19 +129,23 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                 icon: Icon(
                   Icons.text_format,
                   size: 16,
-                  color: sm.sensibleMayusculas ? Colors.blueAccent : Colors.white54,
+                  color: sm.sensibleMayusculas
+                      ? Colors.blueAccent
+                      : Colors.white54,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                 tooltip: 'Coincidir mayúsculas / minúsculas',
-                onPressed: () => sm.setSensibleMayusculas(!sm.sensibleMayusculas),
+                onPressed: () =>
+                    sm.setSensibleMayusculas(!sm.sensibleMayusculas),
               ),
               // Botón palabra completa
               IconButton(
                 icon: Icon(
                   Icons.space_bar,
                   size: 16,
-                  color: sm.palabraCompleta ? Colors.blueAccent : Colors.white54,
+                  color:
+                      sm.palabraCompleta ? Colors.blueAccent : Colors.white54,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
@@ -148,7 +154,8 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
               ),
               // Botón Anterior
               IconButton(
-                icon: const Icon(Icons.arrow_upward, size: 16, color: Colors.white70),
+                icon: const Icon(Icons.arrow_upward,
+                    size: 16, color: Colors.white70),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                 tooltip: 'Coincidencia anterior (Shift+F3)',
@@ -156,7 +163,8 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
               ),
               // Botón Siguiente
               IconButton(
-                icon: const Icon(Icons.arrow_downward, size: 16, color: Colors.white70),
+                icon: const Icon(Icons.arrow_downward,
+                    size: 16, color: Colors.white70),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                 tooltip: 'Siguiente coincidencia (F3)',
@@ -187,10 +195,12 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                       style: const TextStyle(color: Colors.white, fontSize: 12),
                       decoration: InputDecoration(
                         hintText: 'Reemplazar por...',
-                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+                        hintStyle: const TextStyle(
+                            color: Colors.white38, fontSize: 12),
                         filled: true,
                         fillColor: const Color(0xFF3C3C3C),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 0),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(3),
                           borderSide: BorderSide.none,
@@ -206,10 +216,12 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0E639C),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     minimumSize: const Size(60, 26),
                   ),
-                  child: const Text('Reemplazar', style: TextStyle(fontSize: 10)),
+                  child:
+                      const Text('Reemplazar', style: TextStyle(fontSize: 10)),
                 ),
                 const SizedBox(width: 4),
                 ElevatedButton(
@@ -217,7 +229,8 @@ class _FindReplaceBarState extends State<FindReplaceBar> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0E639C),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     minimumSize: const Size(60, 26),
                   ),
                   child: const Text('Todo', style: TextStyle(fontSize: 10)),

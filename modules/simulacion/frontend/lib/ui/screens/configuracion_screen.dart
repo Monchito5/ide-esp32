@@ -98,7 +98,11 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                     label: const Text('Guardar Configuracion'),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Configuracion guardada')),
+                        SnackBar(
+                          content: Text(
+                            'Configuracion guardada ($_tiempoEsperaPredeterminado s)',
+                          ),
+                        ),
                       );
                     },
                   ),

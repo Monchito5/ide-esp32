@@ -1,5 +1,4 @@
 // Archivo: modules/editor/frontend/lib/nucleo/search_manager.dart
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'syntax_highlighter.dart';
 
@@ -41,7 +40,8 @@ class SearchManager extends ChangeNotifier {
   bool get barraVisible => _barraVisible;
   int get totalCoincidencias => _coincidencias.length;
   int get indiceActual => _indiceActual;
-  List<CoincidenciaBusqueda> get coincidencias => List.unmodifiable(_coincidencias);
+  List<CoincidenciaBusqueda> get coincidencias =>
+      List.unmodifiable(_coincidencias);
 
   void setBarraVisible(bool visible) {
     _barraVisible = visible;
@@ -151,7 +151,8 @@ class SearchManager extends ChangeNotifier {
   /// REQ-015: Find Previous (con comportamiento circular de inicio a final)
   void findPrevious() {
     if (_coincidencias.isEmpty) return;
-    final int anterior = (_indiceActual - 1 + _coincidencias.length) % _coincidencias.length;
+    final int anterior =
+        (_indiceActual - 1 + _coincidencias.length) % _coincidencias.length;
     _seleccionarCoincidencia(anterior);
     notifyListeners();
   }

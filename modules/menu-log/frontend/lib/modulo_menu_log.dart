@@ -6,7 +6,7 @@ import 'panel_menu_log.dart';
 /// Implementacion del contrato ModuloIde para el modulo Menu-Log.
 class ModuloMenuLog implements ModuloIde {
   ModuloMenuLog({Uri? apiBase})
-    : _apiBase = apiBase ?? Uri.parse('http://127.0.0.1:8765/');
+      : _apiBase = apiBase ?? Uri.parse('http://127.0.0.1:8765/');
 
   final Uri _apiBase;
 

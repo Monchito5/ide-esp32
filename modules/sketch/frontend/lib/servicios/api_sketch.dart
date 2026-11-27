@@ -5,8 +5,8 @@ import 'package:http/http.dart' as http;
 /// Servicio HTTP para comunicarse con el backend del modulo Sketch.
 class ApiSketch {
   ApiSketch({String? baseUrl, http.Client? cliente})
-    : baseUrl = baseUrl ?? 'http://127.0.0.1:8765/api/v1',
-      _cliente = cliente ?? http.Client();
+      : baseUrl = baseUrl ?? 'http://127.0.0.1:8765/api/v1',
+        _cliente = cliente ?? http.Client();
 
   final String baseUrl;
   final http.Client _cliente;
