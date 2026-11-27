@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../../nucleo/acciones_ayuda.dart';
 import '../../nucleo/registro_modulos.dart';
+import '../componentes/dialogos_flash_sprint4.dart';
 import '../temas/tema_ide.dart';
 
 const String _plantillaEspIdfPredeterminada = '''#include <stdio.h>
@@ -98,6 +99,10 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
   String _modoOperacion = 'Modo Físico';
   String _estadoIde = 'Listo';
   bool _compilando = false;
+  String? _ultimoBootloaderBin;
+  String? _ultimoPartitionsBin;
+  String? _ultimoNvsSslBin;
+  String? _ultimoAppBin;
 
   final TextEditingController _codigoController = TextEditingController(
     text: _plantillaEspIdfPredeterminada,
@@ -317,11 +322,20 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                 'Compilacion ESP-IDF completada exitosamente.',
           );
           for (final bin in binarios) {
-            final nombre = bin['filename'];
+            final nombre = bin['filename']?.toString() ?? '';
             final offset = bin['flash_offset'];
             final bytes = bin['size_bytes'];
-            final extra =
-                mostrarRutasBinarios ? ' -> ${bin['absolute_path']}' : '';
+            final absPath = bin['absolute_path']?.toString();
+            if (absPath != null && absPath.isNotEmpty) {
+              if (nombre.toLowerCase().contains('bootloader')) {
+                _ultimoBootloaderBin = absPath;
+              } else if (nombre.toLowerCase().contains('partition')) {
+                _ultimoPartitionsBin = absPath;
+              } else if (nombre.toLowerCase().endsWith('.bin')) {
+                _ultimoAppBin = absPath;
+              }
+            }
+            final extra = mostrarRutasBinarios ? ' -> $absPath' : '';
             _agregarLog('  Artefacto: $nombre @ $offset ($bytes bytes)$extra');
           }
         } else {
@@ -535,13 +549,22 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
                 _buildMenuButton(
                   context,
                   'Sketch',
-                  ['Verificar / Compilar', 'Subir', 'Exportar binario'],
+                  [
+                    'Verificar / Compilar',
+                    'Subir',
+                    'Flasheo Completo (esptool)',
+                    'Exportar binario',
+                  ],
                 ),
                 _buildMenuButton(context, 'Herramientas', [
                   'Placa',
                   'Puerto',
                   'Detectar placa ESP32',
                   'Estado ESP-IDF',
+                  'Grabar Bootloader',
+                  'Tabla de Particiones',
+                  'Certificados SSL (NVS)',
+                  'Flasheo Completo',
                   'Auto Formato',
                   'Monitor Serie',
                   'Recargar datos',
@@ -1092,6 +1115,23 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
         _compilarConEspIdf(mostrarRutasBinarios: true);
         return;
       }
+      if (valor == 'Flasheo Completo (esptool)') {
+        mostrarWizardFlasheoCompleto(
+          context: context,
+          apiBase: _apiBase,
+          placaNombre: _placaSeleccionada,
+          targetIdf: _targetIdfSeleccionado,
+          puertoActual: _puertoSeleccionado,
+          offsetBootloader:
+              _perfilActual()['bootloader_offset']?.toString() ?? '0x0',
+          bootloaderInicial: _ultimoBootloaderBin,
+          partitionsInicial: _ultimoPartitionsBin,
+          nvsSslInicial: _ultimoNvsSslBin,
+          appInicial: _ultimoAppBin,
+          onLog: _agregarLog,
+        );
+        return;
+      }
       if (valor == 'Subir') {
         if (_puertoSeleccionado == 'No detectado' ||
             _puertoSeleccionado == 'Buscando...') {
@@ -1119,6 +1159,56 @@ class _LayoutPrincipalState extends State<LayoutPrincipal> {
       }
       if (valor == 'Estado ESP-IDF') {
         _verificarEstadoEspIdf();
+        return;
+      }
+      if (valor == 'Grabar Bootloader') {
+        mostrarDialogoGrabarBootloader(
+          context: context,
+          apiBase: _apiBase,
+          placaNombre: _placaSeleccionada,
+          targetIdf: _targetIdfSeleccionado,
+          puertoActual: _puertoSeleccionado,
+          offsetBootloader:
+              _perfilActual()['bootloader_offset']?.toString() ?? '0x0',
+          rutaBootloaderInicial: _ultimoBootloaderBin,
+          onLog: _agregarLog,
+        );
+        return;
+      }
+      if (valor == 'Tabla de Particiones') {
+        mostrarDialogoParticiones(
+          context: context,
+          apiBase: _apiBase,
+          onParticionGenerada: (path) =>
+              setState(() => _ultimoPartitionsBin = path),
+          onLog: _agregarLog,
+        );
+        return;
+      }
+      if (valor == 'Certificados SSL (NVS)') {
+        mostrarDialogoCertificadosSsl(
+          context: context,
+          apiBase: _apiBase,
+          onNvsGenerado: (path) => setState(() => _ultimoNvsSslBin = path),
+          onLog: _agregarLog,
+        );
+        return;
+      }
+      if (valor == 'Flasheo Completo') {
+        mostrarWizardFlasheoCompleto(
+          context: context,
+          apiBase: _apiBase,
+          placaNombre: _placaSeleccionada,
+          targetIdf: _targetIdfSeleccionado,
+          puertoActual: _puertoSeleccionado,
+          offsetBootloader:
+              _perfilActual()['bootloader_offset']?.toString() ?? '0x0',
+          bootloaderInicial: _ultimoBootloaderBin,
+          partitionsInicial: _ultimoPartitionsBin,
+          nvsSslInicial: _ultimoNvsSslBin,
+          appInicial: _ultimoAppBin,
+          onLog: _agregarLog,
+        );
         return;
       }
       if (valor == 'Auto Formato') {

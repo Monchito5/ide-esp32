@@ -94,11 +94,124 @@ class ApiHerramientas {
     );
   }
 
-  /// --- Reportes ---
+  /// --- Reportes e Historial de Flasheo (Sprint 4) ---
 
   Future<ResultadoApi<Map<String, dynamic>>> resumenFlash() async {
     return _ejecutar<Map<String, dynamic>>(
       http.get(Uri.parse('$baseUrl/reportes/flash')),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<List<Map<String, dynamic>>>> historialFlash() async {
+    return _ejecutar<List<Map<String, dynamic>>>(
+      http.get(Uri.parse('$baseUrl/historial-flash')),
+      (d) => (d['historial'] as List).cast<Map<String, dynamic>>(),
+    );
+  }
+
+  /// --- Particiones, Certificados SSL (NVS) y esptool (Sprint 4) ---
+
+  Future<ResultadoApi<List<Map<String, dynamic>>>>
+      listarPlantillasParticiones() async {
+    return _ejecutar<List<Map<String, dynamic>>>(
+      http.get(Uri.parse('$baseUrl/particiones/plantillas')),
+      (d) => (d['plantillas'] as List).cast<Map<String, dynamic>>(),
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> generarTablaParticiones({
+    String? csvContenido,
+    String? plantillaId,
+    String nombre = 'partition-table',
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/particiones/generar'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'csv_contenido': csvContenido,
+          'plantilla_id': plantillaId,
+          'nombre': nombre,
+        }),
+      ),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> generarCertificadosNvs({
+    String? caCert,
+    String? clientCert,
+    String? clientKey,
+    String namespace = 'ssl_certs',
+    int tamanioBytes = 0x6000,
+    String offset = '0x9000',
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/certificados/generar-nvs'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'ca_cert': caCert,
+          'client_cert': clientCert,
+          'client_key': clientKey,
+          'namespace': namespace,
+          'tamanio_bytes': tamanioBytes,
+          'offset': offset,
+        }),
+      ),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> flashearBootloader({
+    required String bootloaderPath,
+    required String target,
+    String? puerto,
+    String modo = 'emulado',
+    bool verificar = true,
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/esptool/bootloader'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'bootloader_path': bootloaderPath,
+          'target': target,
+          'puerto': puerto,
+          'modo': modo,
+          'verificar': verificar,
+        }),
+      ),
+      (d) => d as Map<String, dynamic>,
+    );
+  }
+
+  Future<ResultadoApi<Map<String, dynamic>>> flashearCompleto({
+    required String target,
+    required String bootloaderPath,
+    required String partitionsPath,
+    required String appPath,
+    String? nvsCertsPath,
+    String? puerto,
+    String modo = 'emulado',
+    bool verificar = true,
+  }) async {
+    return _ejecutar<Map<String, dynamic>>(
+      http.post(
+        Uri.parse('$baseUrl/esptool/flash-completo'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'target': target,
+          'puerto': puerto,
+          'modo': modo,
+          'bootloader_path': bootloaderPath,
+          'partitions_path': partitionsPath,
+          'nvs_certs_path': nvsCertsPath,
+          'app_path': appPath,
+          'verificar': verificar,
+        }),
+      ),
       (d) => d as Map<String, dynamic>,
     );
   }
